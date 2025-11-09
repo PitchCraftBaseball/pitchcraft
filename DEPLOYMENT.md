@@ -1,5 +1,5 @@
 # Deployment Instructions
-These aren't currently written with Docker in mind, though we'll probably want to switch to it at some point.
+These aren't currently written with Docker in mind, though we'll probably want to switch to it at some point and automate all of this.
 
 ### Repo Setup
 ```
@@ -10,6 +10,11 @@ cd pitchcraft
 ```
 sudo yum install npm
 sudo yum install python3.11
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+. ~/.nvm/nvm.sh
+nvm install 22
+nvm use 22
+nvm alias default 22
 ```
 ### Python (3.11) Setup
 ```
