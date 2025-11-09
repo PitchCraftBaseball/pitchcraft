@@ -1,0 +1,38 @@
+import { useEffect, useState } from 'react'
+
+export default function App() {
+   const [pong, setPong] = useState(null)
+   const [harperTxt, setHarperTxt] = useState('');
+   const [error, setError] = useState(null)
+
+   useEffect(() => {
+      fetch('/api/ping/')
+         .then((r) => r.json())
+         .then((data) => setPong(data.pong))
+         .catch((err) => setError(String(err)))
+   }, [])
+
+   useEffect(() => {
+      fetch('/api/harper/')
+         .then(r => r.text())
+         .then(setHarperTxt)
+         .catch(() => setHarperTxt('Error getting Harper info :('))
+   }, [])
+
+   return (
+      <div style={{ fontFamily: 'system-ui', padding: 24 }}>
+         <h1>PitchCraft</h1>
+         <img
+	    src="/JohnBaseball.gif"
+	    style={{ display: 'block', maxWidth: 400, width: '100%', height: 'auto', borderRadius: 8 }}
+	 />
+         <p>Call to <code>/api/ping/</code>:</p>
+         {pong !== null && <pre>{JSON.stringify({ pong }, null, 2)}</pre>}
+         {error && <pre style={{ color: 'crimson' }}>{error}</pre>}
+         <h2 style={{ marginTop: 24 }}>Bryce Harper playerid_lookup</h2>
+         <pre style={{ border: '1px solid #666', borderRadius: 6, padding: 12, background: 'transparent', maxWidth: 800, overflowX: 'auto' }}>
+            {harperTxt || 'Loading…'}
+         </pre>
+      </div>
+   )
+}
