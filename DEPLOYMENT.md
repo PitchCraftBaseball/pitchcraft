@@ -1,8 +1,15 @@
 # Deployment Instructions
+These aren't currently written with Docker in mind, though we'll probably want to switch to it at some point.
+
 ### Repo Setup
 ```
 git clone <url>
 cd pitchcraft
+```
+### Dependencies (ec2's distro uses yum)
+```
+sudo yum install npm
+sudo yum install python3.11
 ```
 ### Python (3.11) Setup
 ```
