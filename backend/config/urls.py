@@ -16,10 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from api.views import ping, harper_playerid
+from api.views import ping #, harper_playerid
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/ping/', ping),
-    path('api/harper/', harper_playerid),
+#    path('api/harper/', harper_playerid),
 ]

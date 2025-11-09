@@ -1,10 +1,10 @@
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
-from pybaseball import playerid_lookup
+#from pybaseball import playerid_lookup
 
-def harper_playerid(_request):
-   df = playerid_lookup('harper', 'bryce')
-   return HttpResponse(df.to_string(index=False), content_type="text/plain")
+#def harper_playerid(_request):
+#   df = playerid_lookup('harper', 'bryce')
+#   return HttpResponse(df.to_string(index=False), content_type="text/plain")
 
 def ping(_request):
    return JsonResponse({"pong": True})
