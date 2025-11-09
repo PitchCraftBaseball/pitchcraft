@@ -1,7 +1,14 @@
+# editor temp files
+*~
+*.swp
+
+# python
 venv/
 __pycache__/
 
+# django
 db.sqlite3
 
+# node
 frontend/node_modules/
 frontend/dist/
