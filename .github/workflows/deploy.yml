@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  OWNER: PitchCraftBaseball
+  OWNER: pitchcraftbaseball
   REPO: pitchcraft
 
 jobs:
