@@ -1,40 +1,29 @@
-# Deployment Instructions
-These aren't currently written with Docker in mind, though we'll probably want to switch to it at some point and automate all of this.
-
-### Repo Setup
-```
-git clone <url>
-cd pitchcraft
-```
-### Dependencies (ec2's distro uses yum)
-```
-sudo yum install npm
-sudo yum install python3.11
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-. ~/.nvm/nvm.sh
-nvm install 22
-nvm use 22
-nvm alias default 22
-```
-### Python (3.11) Setup
-```
-python -m venv .venv
-source venv/bin/activate # Linux/Mac
-. .\venv\Scripts\activate # Windows
-pip install -r requirements.txt
-```
-### Backend
-```
-cd backend
-python manage.py runserver
-
-# http://127.0.0.1:8000/api/ping/
-```
-### Frontend
-```
-cd frontend
-npm install
-npm run dev
-
-# http://localhost:5173/
-```
+# Deployment Instructions (on new ec2 instance)
+- Create new ec2 instance
+- Apply 'webserver' security group to instance to allow HTTP traffic
+- Generate keypair for ec2 instance
+- Login as ec2-user and do the following:
+    - `ssh -i <.pem private key path> ec2-user@<instance public ip>`
+    - `sudo adduser deploy`
+    - `sudo install -d -m 700 -o deploy -g deploy /home/deploy/.ssh`
+    - `sudo cp /home/ec2-user/.ssh/authorized_keys /home/deploy/.ssh/authorized_keys`
+    - `sudo chown -R deploy:deploy /home/deploy/.ssh`
+    - `sudo chmod 600 /home/deploy/.ssh/authorized_keys`
+    - `sudo dnf install -y docker`
+    - `sudo systemctl enable --now docker`
+    - `sudo groupadd -f docker`
+    - `sudo usermod -aG docker deploy`
+    - `sudo mkdir -p /usr/local/lib/docker/cli-plugins`
+    - `sudo curl -SL https://github.com/docker/compose/releases/download/v2.29.7/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose`
+    - `sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose`
+    - `sudo mkdir -p /opt/app`
+    - `sudo chown -R deploy:deploy /opt/app`
+- Login as deploy user account so group add takes effect
+    - `ssh -i <.pem private key path> deploy@<instance public ip>`
+- Copy repo to instance (only needs to be done once)
+    - `scp -i <.pem private key path> -r <pitchcraft_repo_path>\* deploy@<instance public ip>:/opt/app`
+- Update repo secrets
+    - Repo -> settings -> secrets -> actions
+    - Update EC2\_HOST to be the IP of the new EC2 instance
+    - Update EC2\_SSH\_KEY to the new private key if changed
+- Push something to main or run deploy action manually and it should all work after job runs
