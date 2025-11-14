@@ -1,6 +1,6 @@
 services:
   web:
-    image: ghcr.io/OWNER/REPO-web:${IMAGE_TAG}
+    image: ghcr.io/pitchcraftbaseball/pitchcraft-web:${IMAGE_TAG}
     environment:
       DJ_DEBUG: "false"
       DJ_SECRET_KEY: "change-me"
@@ -8,7 +8,7 @@ services:
       - "8000"
 
   nginx:
-    image: ghcr.io/OWNER/REPO-nginx:${IMAGE_TAG}
+    image: ghcr.io/pitchcraftbaseball/pitchcraft-nginx:${IMAGE_TAG}
     ports:
       - "80:80"
     volumes:
