@@ -60,7 +60,7 @@ jobs:
             cd /opt/app
             echo "IMAGE_TAG=${{ github.sha }}" > .env.runtime
             docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
-            docker compose --env-file .env.runtime pull
-            docker compose --env-file .env.runtime up -d --remove-orphans
+            docker-compose --env-file .env.runtime pull
+            docker-compose --env-file .env.runtime up -d --remove-orphans
             docker image prune -f
 
