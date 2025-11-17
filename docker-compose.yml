@@ -1,9 +1,6 @@
 services:
   web:
     image: ghcr.io/pitchcraftbaseball/pitchcraft-web:${IMAGE_TAG}
-    environment:
-      DJ_DEBUG: "false"
-      DJ_SECRET_KEY: "change-me"
     expose:
       - "8000"
 
