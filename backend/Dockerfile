@@ -3,7 +3,7 @@ WORKDIR /app
 
 RUN apk add --no-cache openssl
 
-COPY backend/package.json backend/tsconfig.json backend/prisma/schema.prisma ./
+COPY backend/package.json backend/package-lock.json backend/tsconfig.json backend/prisma/schema.prisma ./
 RUN npm ci
 
 COPY backend/src ./src
