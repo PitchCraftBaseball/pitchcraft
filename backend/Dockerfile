@@ -19,7 +19,6 @@ RUN apk add --no-cache openssl curl
 
 COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/dist ./dist
-COPY --from=base /app/prisma ./prisma
 COPY backend/package.json ./
 
 EXPOSE 8000
