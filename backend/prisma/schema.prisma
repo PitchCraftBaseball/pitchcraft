@@ -1,25 +1,24 @@
-// prisma/schema.prisma
-generator client {
-  provider = "prisma-client-js"
-}
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-model players {
-  id             Int       @id
-  first_name     String
-  last_name      String
-  birthdate      DateTime? @db.Date
-  team_id        Int?
-  position       String    @db.VarChar(3)
-  batting_side   String    @db.Char(1)
-  throwing_arm   String    @db.Char(1)
-  height         Int?      @db.SmallInt
-  weight         Int?      @db.SmallInt
-  jersey_number  Int?      @db.SmallInt
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Player {
+  id            Int     @id
+  first_name    String
+  last_name     String
+  birthdate     DateTime?
+  team_id       Int?
+  position      String
+  batting_side  String
+  throwing_arm  String
+  height        Int?
+  weight        Int?
+  jersey_number Int?
 
   @@map("players")
 }
