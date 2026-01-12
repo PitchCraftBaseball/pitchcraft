@@ -23,7 +23,7 @@ app.get("/api/health", async (_req: Request, res: Response) => {
 
 app.get("/api/players", async (_req: Request, res: Response) => {
   try {
-    const players = await prisma.players.findMany({ take: 25 });
+    const players = await prisma.player.findMany({ take: 25 });
     res.json(players);
   } catch {
     res.status(500).json({ error: "failed_to_query_players" });
