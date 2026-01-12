@@ -1,38 +1,40 @@
 import { useEffect, useState } from 'react'
 
 export default function App() {
-   const [pong, setPong] = useState(null)
-   const [harperTxt, setHarperTxt] = useState('');
-   const [error, setError] = useState(null)
+  const [status, setStatus] = useState('checking')
+  const [players, setPlayers] = useState([])
+  const [err, setErr] = useState('')
 
-   useEffect(() => {
-      fetch('/api/ping/')
-         .then((r) => r.json())
-         .then((data) => setPong(data.pong))
-         .catch((err) => setError(String(err)))
-   }, [])
+  useEffect(() => {
+    (async () => {
+      try {
+        const h = await fetch('/api/health').then(r => r.json())
+        if (!h.ok) { setStatus('down'); return }
+        setStatus('up')
 
-   useEffect(() => {
-      fetch('/api/harper/')
-         .then(r => r.text())
-         .then(setHarperTxt)
-         .catch(() => setHarperTxt('Error getting Harper info :('))
-   }, [])
+        const list = await fetch('/api/players').then(r => r.json())
+        setPlayers(list)
+      } catch (e) {
+        setStatus('down')
+        setErr(String(e))
+      }
+    })()
+  }, [])
 
-   return (
-      <div style={{ fontFamily: 'system-ui', padding: 24 }}>
-         <h1>PitchCraft</h1>
-         <img
-	    src="/JohnBaseball.gif"
-	    style={{ display: 'block', maxWidth: 400, width: '100%', height: 'auto', borderRadius: 8 }}
-	 />
-         <p>Call to <code>/api/ping/</code>:</p>
-         {pong !== null && <pre>{JSON.stringify({ pong }, null, 2)}</pre>}
-         {error && <pre style={{ color: 'crimson' }}>{error}</pre>}
-         <h2 style={{ marginTop: 24 }}>Bryce Harper playerid_lookup</h2>
-         <pre style={{ border: '1px solid #666', borderRadius: 6, padding: 12, background: 'transparent', maxWidth: 800, overflowX: 'auto' }}>
-            {harperTxt || 'Loading…'}
-         </pre>
-      </div>
-   )
+  return (
+    <div style={{ fontFamily: 'system-ui', padding: 24 }}>
+      <h1>PitchCraft</h1>
+      <p>DB: {status}</p>
+
+      {err && <p style={{ color: 'crimson' }}>{err}</p>}
+
+      {status === 'up' && (
+        <ul>
+          {players.map(p => (
+            <li key={p.id}>{p.firstName} {p.lastName}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
 }

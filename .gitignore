@@ -12,3 +12,5 @@ db.sqlite3
 # node
 frontend/node_modules/
 frontend/dist/
+backend/node_modules/
+backend/dist/
