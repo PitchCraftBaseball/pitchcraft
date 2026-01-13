@@ -6,7 +6,7 @@
 venv/
 __pycache__/
 
-# django
+# sqlite
 db.sqlite3
 
 # node
