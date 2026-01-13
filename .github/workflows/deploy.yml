@@ -51,17 +51,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Upload compose & nginx.conf to EC2
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: deploy
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: |
-            docker-compose.yml
-            nginx/nginx.conf
-          target: /opt/app
-          strip_components: 0
+      # - name: Upload compose & nginx.conf to EC2
+      #   uses: appleboy/scp-action@v0.1.7
+      #   with:
+      #     host: ${{ secrets.EC2_HOST }}
+      #     username: deploy
+      #     key: ${{ secrets.EC2_SSH_KEY }}
+      #     source: |
+      #       docker-compose.yml
+      #       nginx/nginx.conf
+      #     target: /opt/app
+      #     strip_components: 0
 
       - name: SSH deploy
         uses: appleboy/ssh-action@v1.0.3

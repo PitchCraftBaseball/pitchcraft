@@ -23,3 +23,9 @@ COPY backend/package.json ./
 
 EXPOSE 8000
 CMD ["npm", "start"]
+
+
+
+
+
+postgresql://postgres:baseball@postgres-db.cwhoq2eqwvd9.us-east-1.rds.amazonaws.com:5432/pitchcraft?sslmode=require
