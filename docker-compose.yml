@@ -5,6 +5,7 @@ services:
       - "8000"
     environment:
       - DATABASE_URL=${DATABASE_URL}
+      - MODEL_BASE_URL=${MODEL_BASE_URL}
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/health"]
       interval: 10s
