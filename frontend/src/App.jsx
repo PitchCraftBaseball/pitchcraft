@@ -34,14 +34,6 @@ export default function App() {
 
       {status === "up" && (
         <>
-          <ul>
-            {players.map((p) => (
-              <li key={p.id}>
-                {p.first_name} {p.last_name}
-              </li>
-            ))}
-          </ul>
-
           <Simulation players={players} />
         </>
       )}
