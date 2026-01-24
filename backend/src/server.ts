@@ -6,7 +6,7 @@ import { prisma } from "./services/db.js";
 
 const app = express();
 const PORT = Number(process.env.PORT || 8000);
-const MODEL_API_BASE_URL = process.env.MODEL_API_BASE_URL ?? "http://localhost:8081/api"; 
+const MODEL_BASE_URL = process.env.MODEL_BASE_URL;
 
 app.set("trust proxy", true);
 app.use(morgan("combined"));
@@ -35,7 +35,7 @@ app.get("/api/players", async (_req: Request, res: Response) => {
 // These are passthrough endpoints: flow is Pitchcraft FE->Pitchcraft BE->Model Webserver
 app.get("/api/model/health", async (_req, res) => {
   try {
-    const r = await fetch(`${MODEL_API_BASE_URL}/health`);
+    const r = await fetch(`${MODEL_BASE_URL}/api/health`);
     const data = await r.json().catch(() => ({}));
     return res.status(r.status).json(data);
   } catch (e) {
@@ -45,7 +45,7 @@ app.get("/api/model/health", async (_req, res) => {
 // These are passthrough endpoints: flow is Pitchcraft FE->Pitchcraft BE->Model Webserver
 app.post("/api/model/sequence", async (req, res) => {
   try {
-    const r = await fetch(`${MODEL_API_BASE_URL}/sequence`, {
+    const r = await fetch(`${MODEL_BASE_URL}/api/sequence`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(req.body),
