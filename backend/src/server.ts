@@ -6,12 +6,14 @@ import { prisma } from "./services/db.js";
 
 const app = express();
 const PORT = Number(process.env.PORT || 8000);
+const MODEL_API_BASE_URL = process.env.MODEL_API_BASE_URL ?? "http://localhost:8081/api"; 
 
 app.set("trust proxy", true);
 app.use(morgan("combined"));
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
+// DB health
 app.get("/api/health", async (_req: Request, res: Response) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
@@ -20,13 +22,41 @@ app.get("/api/health", async (_req: Request, res: Response) => {
     res.status(500).json({ ok: false, error: "db_unreachable" });
   }
 });
-
+// DB query example
 app.get("/api/players", async (_req: Request, res: Response) => {
   try {
     const players = await prisma.player.findMany({ take: 25 });
     res.json(players);
   } catch {
     res.status(500).json({ error: "failed_to_query_players" });
+  }
+});
+
+// These are passthrough endpoints: flow is Pitchcraft FE->Pitchcraft BE->Model Webserver
+app.get("/api/model/health", async (_req, res) => {
+  try {
+    const r = await fetch(`${MODEL_API_BASE_URL}/health`);
+    const data = await r.json().catch(() => ({}));
+    return res.status(r.status).json(data);
+  } catch (e) {
+    return res.status(502).json({ error: "model_unreachable" });
+  }
+});
+// These are passthrough endpoints: flow is Pitchcraft FE->Pitchcraft BE->Model Webserver
+app.post("/api/model/sequence", async (req, res) => {
+  try {
+    const r = await fetch(`${MODEL_API_BASE_URL}/sequence`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(req.body),
+    });
+
+    const text = await r.text();
+    res.status(r.status);
+    res.setHeader("Content-Type", r.headers.get("content-type") ?? "application/json");
+    return res.send(text);
+  } catch (e) {
+    return res.status(502).json({ error: "model_unreachable" });
   }
 });
 
