@@ -1,45 +1,51 @@
 import { useEffect, useMemo, useState } from "react";
+import type { Player } from "./types";
 
 const DEFAULT_FEATURES = {
   categorical: [{ feature_name: "pitch_type", value: "FF" }],
   boolean: [{ feature_name: "is_home", value: true }],
 };
 
-export default function Simulation({ players = [] }) {
-  const [batterId, setBatterId] = useState("");
-  const [pitcherId, setPitcherId] = useState("");
-  const [featuresText, setFeaturesText] = useState(
+type SimulationProps = {
+  players?: Player[];
+};
+
+export default function Simulation({ players = [] }: SimulationProps) {
+  const [batterId, setBatterId] = useState<string>("");
+  const [pitcherId, setPitcherId] = useState<string>("");
+  const [featuresText, setFeaturesText] = useState<string>(
     JSON.stringify(DEFAULT_FEATURES, null, 2)
   );
 
-  const [loading, setLoading] = useState(false);
-  const [resp, setResp] = useState(null);
-  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [resp, setResp] = useState<unknown | null>(null);
+  const [err, setErr] = useState<string>("");
 
   useEffect(() => {
     if (!players.length) return;
     if (!batterId) setBatterId(String(players[0].id));
-    if (!pitcherId) setPitcherId(String(players[Math.min(1, players.length - 1)].id));
+    if (!pitcherId)
+      setPitcherId(String(players[Math.min(1, players.length - 1)].id));
   }, [players, batterId, pitcherId]);
 
   const batterLabel = useMemo(() => {
-    const p = players.find(x => String(x.id) === String(batterId));
+    const p = players.find((x) => String(x.id) === String(batterId));
     return p ? `${p.first_name} ${p.last_name}` : "";
   }, [players, batterId]);
 
   const pitcherLabel = useMemo(() => {
-    const p = players.find(x => String(x.id) === String(pitcherId));
+    const p = players.find((x) => String(x.id) === String(pitcherId));
     return p ? `${p.first_name} ${p.last_name}` : "";
   }, [players, pitcherId]);
 
-  async function run() {
+  async function run(): Promise<void> {
     setErr("");
     setResp(null);
 
-    let features;
+    let features: unknown;
     try {
       features = JSON.parse(featuresText);
-    } catch (e) {
+    } catch {
       setErr("Features JSON is invalid.");
       return;
     }
@@ -58,28 +64,29 @@ export default function Simulation({ players = [] }) {
         body: JSON.stringify(body),
       });
 
-      const data = await r.json().catch(() => ({}));
+      const data: any = await r.json().catch(() => ({}));
+
       if (!r.ok) {
         setErr(data?.error ? JSON.stringify(data) : `Request failed (${r.status})`);
       } else {
         setResp(data);
       }
     } catch (e) {
-      setErr(String(e));
+      setErr(e instanceof Error ? e.message : String(e));
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={{ marginTop: 24, padding: 16, border: "1px solid #ddd", borderRadius: 8 }}>
-      <h2 style={{ marginTop: 0 }}>Model Simulation</h2>
+    <div className="sim">
+      <h2>Model Simulation</h2>
 
-      <div style={{ display: "grid", gridTemplateColumns: "160px 1fr", gap: 10, maxWidth: 720 }}>
+      <div className="sim-grid">
         <label>Batter</label>
         <select value={batterId} onChange={(e) => setBatterId(e.target.value)}>
-          {players.map(p => (
-            <option key={p.id} value={String(p.id)}>
+          {players.map((p) => (
+            <option key={String(p.id)} value={String(p.id)}>
               {p.first_name} {p.last_name} (id {p.id})
             </option>
           ))}
@@ -87,8 +94,8 @@ export default function Simulation({ players = [] }) {
 
         <label>Pitcher</label>
         <select value={pitcherId} onChange={(e) => setPitcherId(e.target.value)}>
-          {players.map(p => (
-            <option key={p.id} value={String(p.id)}>
+          {players.map((p) => (
+            <option key={String(p.id)} value={String(p.id)}>
               {p.first_name} {p.last_name} (id {p.id})
             </option>
           ))}
@@ -99,23 +106,23 @@ export default function Simulation({ players = [] }) {
           rows={8}
           value={featuresText}
           onChange={(e) => setFeaturesText(e.target.value)}
-          style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}
         />
       </div>
 
-      <button onClick={run} disabled={loading} style={{ marginTop: 12 }}>
+      <button className="btn" onClick={run} disabled={loading}>
         {loading ? "Running..." : "Run simulation"}
       </button>
 
-      <div style={{ marginTop: 12, color: "#555" }}>
-        <div><b>Selected:</b> batter={batterLabel} pitcher={pitcherLabel}</div>
+      <div className="meta">
+        <div>
+          <b>Selected:</b> batter={batterLabel} pitcher={pitcherLabel}
+        </div>
       </div>
 
-      {err && <pre style={{ marginTop: 12, color: "crimson", whiteSpace: "pre-wrap" }}>{err}</pre>}
-      {resp && (
-        <pre style={{ marginTop: 12, background: "#f7f7f7", padding: 12, borderRadius: 8 }}>
-          {JSON.stringify(resp, null, 2)}
-        </pre>
+      {err && <pre className="pre pre-error">{err}</pre>}
+
+      {resp !== null && (
+        <pre className="pre pre-output">{JSON.stringify(resp, null, 2)}</pre>
       )}
     </div>
   );
