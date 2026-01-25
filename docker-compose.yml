@@ -5,9 +5,25 @@ services:
       - "8000"
     environment:
       - DATABASE_URL=${DATABASE_URL}
-      - MODEL_BASE_URL=${MODEL_BASE_URL}
+      - MODEL_BASE_URL=${MODEL_BASE_URL:-http://model-api:8000}
+    depends_on:
+      model-api:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  model-api:
+    image: ghcr.io/pitchcraftbaseball/model-webserver-api:${IMAGE_TAG}
+    expose:
+      - "8000"
+    environment:
+      - PORT=8000
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:8000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 10s
       timeout: 3s
       retries: 10
