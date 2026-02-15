@@ -12,7 +12,7 @@ export default function Home() {
     <Button variant="contained" onClick={() => navigate("/guide")}>User Guide</Button>
     <Button variant="contained" onClick={() => navigate("/simulation")}>Simulation</Button>
     <br />
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
+    {/* <LocalizationProvider dateAdapter={AdapterDayjs}>
       <DatePicker
         defaultValue={dayjs()}
         onChange={(newValue) => {
@@ -20,6 +20,6 @@ export default function Home() {
           console.log("Date changed: " + newValue);
         }
       }/>
-    </LocalizationProvider>
+    </LocalizationProvider> */}
   </div>
 }

@@ -9,10 +9,12 @@ export default function GameScheduleTable() {
   const [gameDate, setGameDate] = useState<Dayjs | null>(dayjs());
   const [scheduleRows, setScheduleRows] = useState
 
-  // todo: figure out how to build out a table for this frontend.. not sure what the shape needs to be because i have the attention span of a screwdriver
-  async function handleDateChange(e: PickerValue)  {
+  
+
+  async function handleDateChange(e: Dayjs | null)  {
     setGameDate(e);
     // todo: trigger query again
+    
     return;
   }
 
@@ -21,13 +23,11 @@ export default function GameScheduleTable() {
       <h2>Schedule</h2>
 
       <LocalizationProvider dateAdapter={AdapterDayjs}>
-        <div className="schedule-grid">
-          <DatePicker 
-            label="datepicker" 
-            value={gameDate} 
-            onChange={(e) => handleDateChange(e)} 
-          />
-        </div>
+        <DatePicker 
+          label="datepicker" 
+          value={gameDate} 
+          onChange={handleDateChange} 
+        />
       </LocalizationProvider>
 
     </div>
