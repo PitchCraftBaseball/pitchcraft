@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import Simulation from "./Simulation";
-import type { Player } from "./types";
+import ModelOutputTest from "./ModelOutputTest";
 import "./App.css";
 
 type Status = "checking" | "up" | "down";
@@ -8,8 +7,6 @@ type HealthResponse = { ok: boolean };
 
 export default function App() {
   const [status, setStatus] = useState<Status>("checking");
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [err, setErr] = useState<string>("");
 
   useEffect(() => {
     (async () => {
@@ -19,21 +16,6 @@ export default function App() {
         setStatus(data.ok ? "up" : "down");
       } catch {
         setStatus("down");
-      }
-    })();
-  }, []);
-
-  useEffect(() => {
-    (async () => {
-      setErr("");
-      try {
-        const r = await fetch("/api/players");
-        if (!r.ok) throw new Error(`players fetch failed: ${r.status}`);
-        const data = (await r.json()) as Player[];
-        setPlayers(data);
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        setErr(msg);
       }
     })();
   }, []);
@@ -48,9 +30,7 @@ export default function App() {
         </strong>
       </p>
 
-      {err && <pre className="pre pre-error">{err}</pre>}
-
-      <Simulation players={players} />
+      <ModelOutputTest />
     </div>
   );
 }
