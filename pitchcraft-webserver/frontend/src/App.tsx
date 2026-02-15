@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Simulation from "./Simulation";
 import type { Player } from "./types";
 import "./App.css";
+import GameScheduleTable from "./GameScheduleTable";
 
 type Status = "checking" | "up" | "down";
 type HealthResponse = { ok: boolean };
@@ -51,6 +52,7 @@ export default function App() {
       {err && <pre className="pre pre-error">{err}</pre>}
 
       <Simulation players={players} />
+      <GameScheduleTable />
     </div>
   );
 }

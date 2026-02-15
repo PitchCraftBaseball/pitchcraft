@@ -7,9 +7,13 @@ import { PickerValue } from "@mui/x-date-pickers/internals";
 
 export default function GameScheduleTable() { 
   const [gameDate, setGameDate] = useState<Dayjs | null>(dayjs());
+  const [scheduleRows, setScheduleRows] = useState
 
+  // todo: figure out how to build out a table for this frontend.. not sure what the shape needs to be because i have the attention span of a screwdriver
   async function handleDateChange(e: PickerValue)  {
-    
+    setGameDate(e);
+    // todo: trigger query again
+    return;
   }
 
   return ( 
