@@ -1,1 +1,0 @@
-The nginx config and image in this folder are unused provided the two webservers run on the same EC2 instance.

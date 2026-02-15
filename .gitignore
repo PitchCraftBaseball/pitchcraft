@@ -14,3 +14,6 @@ frontend/node_modules/
 frontend/dist/
 backend/node_modules/
 backend/dist/
+
+# env file for local dev
+.env

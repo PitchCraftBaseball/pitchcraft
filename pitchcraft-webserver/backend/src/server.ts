@@ -4,9 +4,9 @@ import morgan from "morgan";
 import cors from "cors";
 import { prisma } from "./services/db.js";
 
-const app = express();
 const PORT = Number(process.env.PORT || 8000);
-const MODEL_BASE_URL = process.env.MODEL_BASE_URL;
+const modelBaseUrl = process.env.MODEL_BASE_URL;
+const app = express();
 
 app.set("trust proxy", true);
 app.use(morgan("combined"));
@@ -22,30 +22,34 @@ app.get("/api/health", async (_req: Request, res: Response) => {
     res.status(500).json({ ok: false, error: "db_unreachable" });
   }
 });
+
 // DB query example
 app.get("/api/players", async (_req: Request, res: Response) => {
   try {
-    const players = await prisma.player.findMany({ take: 25 });
-    res.json(players);
+    const players = await prisma.player?.findMany({ take: 25 });
+    res.json(players ?? []);
   } catch {
     res.status(500).json({ error: "failed_to_query_players" });
   }
 });
 
-// These are passthrough endpoints: flow is Pitchcraft FE->Pitchcraft BE->Model Webserver
+// Passthrough: Pitchcraft FE -> Pitchcraft BE -> Model API
 app.get("/api/model/health", async (_req, res) => {
+  if (!modelBaseUrl) return res.status(500).json({ error: "model_base_url_not_configured" });
   try {
-    const r = await fetch(`${MODEL_BASE_URL}/api/health`);
+    const r = await fetch(`${modelBaseUrl}/api/health`);
     const data = await r.json().catch(() => ({}));
     return res.status(r.status).json(data);
   } catch (e) {
     return res.status(502).json({ error: "model_unreachable" });
   }
 });
-// These are passthrough endpoints: flow is Pitchcraft FE->Pitchcraft BE->Model Webserver
+
+// Passthrough: Pitchcraft FE -> Pitchcraft BE -> Model API
 app.post("/api/model/sequence", async (req, res) => {
+  if (!modelBaseUrl) return res.status(500).json({ error: "model_base_url_not_configured" });
   try {
-    const r = await fetch(`${MODEL_BASE_URL}/api/sequence`, {
+    const r = await fetch(`${modelBaseUrl}/api/sequence`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(req.body),
