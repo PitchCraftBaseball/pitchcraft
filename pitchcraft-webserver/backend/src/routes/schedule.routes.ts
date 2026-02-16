@@ -1,5 +1,5 @@
 import express from "express"; 
-import { prisma } from "../services/db";
+import { prisma } from "../services/db.js";
 
 let scheduleRouter = express.Router(); 
 
