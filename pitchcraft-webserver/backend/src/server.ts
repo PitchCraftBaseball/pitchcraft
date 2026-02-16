@@ -3,6 +3,7 @@ import express, { Request, Response } from "express";
 import morgan from "morgan";
 import cors from "cors";
 import { prisma } from "./services/db.js";
+import scheduleRouter from "./routes/schedule.routes.js";
 
 const PORT = Number(process.env.PORT || 8000);
 const modelBaseUrl = process.env.MODEL_BASE_URL;
@@ -63,6 +64,7 @@ app.post("/api/model/predict", async (req, res) => {
   }
 });
 
+app.use("/api/schedule", scheduleRouter)
 app.use("/api", (_req: Request, res: Response) => res.status(404).json({ error: "not_found" }));
 
 app.listen(PORT, () => {

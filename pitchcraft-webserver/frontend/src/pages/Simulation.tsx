@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Player } from "./types";
+import { Button } from "@mui/material";
+import ModelOutputTest from "../components/ModelOutputTest";
 
 const DEFAULT_FEATURES = {
   categorical: [{ feature_name: "pitch_type", value: "FF" }],
@@ -109,9 +111,9 @@ export default function Simulation({ players = [] }: SimulationProps) {
         />
       </div>
 
-      <button className="btn" onClick={run} disabled={loading}>
+      <Button className="btn" variant="contained" onClick={run} disabled={loading}>
         {loading ? "Running..." : "Run simulation"}
-      </button>
+      </Button>
 
       <div className="meta">
         <div>
@@ -124,6 +126,8 @@ export default function Simulation({ players = [] }: SimulationProps) {
       {resp !== null && (
         <pre className="pre pre-output">{JSON.stringify(resp, null, 2)}</pre>
       )}
+
+      <ModelOutputTest />
     </div>
   );
 }

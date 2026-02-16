@@ -1,36 +1,17 @@
-import { useEffect, useState } from "react";
-import ModelOutputTest from "./ModelOutputTest";
-import "./App.css";
-
-type Status = "checking" | "up" | "down";
-type HealthResponse = { ok: boolean };
+import { Routes, Route } from "react-router";
+import Navbar from "./components/Navbar";
+import Home from "./pages/Home";
+import Simulation from "./pages/Simulation";
 
 export default function App() {
-  const [status, setStatus] = useState<Status>("checking");
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const r = await fetch("/api/health");
-        const data = (await r.json()) as HealthResponse;
-        setStatus(data.ok ? "up" : "down");
-      } catch {
-        setStatus("down");
-      }
-    })();
-  }, []);
-
   return (
-    <div className="page">
-      <h1>Pitchcraft</h1>
-      <p>
-        API status:{" "}
-        <strong>
-          {status === "checking" ? "checking…" : status === "up" ? "UP" : "DOWN"}
-        </strong>
-      </p>
-
-      <ModelOutputTest />
-    </div>
+    <>
+    <Navbar />
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/simulation" element={<Simulation />} />
+      <Route path="*" element={<p>404</p>} />
+    </Routes>
+    </>
   );
 }
