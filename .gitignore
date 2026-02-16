@@ -10,10 +10,10 @@ __pycache__/
 db.sqlite3
 
 # node
-frontend/node_modules/
-frontend/dist/
-backend/node_modules/
-backend/dist/
+*/frontend/node_modules/
+*/frontend/dist/
+*/backend/node_modules/
+*/backend/dist/
+*/node_modules/
 
-# env file for local dev
-.env
+*.env

@@ -3,6 +3,7 @@ import express, { Request, Response } from "express";
 import morgan from "morgan";
 import cors from "cors";
 import { prisma } from "./services/db.js";
+import scheduleRouter from "./routes/schedule.routes.js";
 
 const PORT = Number(process.env.PORT || 8000);
 const modelBaseUrl = process.env.MODEL_BASE_URL;
@@ -37,7 +38,7 @@ app.get("/api/players", async (_req: Request, res: Response) => {
 app.get("/api/model/health", async (_req, res) => {
   if (!modelBaseUrl) return res.status(500).json({ error: "model_base_url_not_configured" });
   try {
-    const r = await fetch(`${modelBaseUrl}/api/health`);
+    const r = await fetch(`http://${modelBaseUrl}/health`);
     const data = await r.json().catch(() => ({}));
     return res.status(r.status).json(data);
   } catch (e) {
@@ -46,15 +47,14 @@ app.get("/api/model/health", async (_req, res) => {
 });
 
 // Passthrough: Pitchcraft FE -> Pitchcraft BE -> Model API
-app.post("/api/model/sequence", async (req, res) => {
+app.post("/api/model/predict", async (req, res) => {
   if (!modelBaseUrl) return res.status(500).json({ error: "model_base_url_not_configured" });
   try {
-    const r = await fetch(`${modelBaseUrl}/api/sequence`, {
+    const r = await fetch(`http://${modelBaseUrl}/predict`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(req.body),
     });
-
     const text = await r.text();
     res.status(r.status);
     res.setHeader("Content-Type", r.headers.get("content-type") ?? "application/json");
@@ -64,6 +64,7 @@ app.post("/api/model/sequence", async (req, res) => {
   }
 });
 
+app.use("/api/schedule", scheduleRouter)
 app.use("/api", (_req: Request, res: Response) => res.status(404).json({ error: "not_found" }));
 
 app.listen(PORT, () => {

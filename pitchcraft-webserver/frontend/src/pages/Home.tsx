@@ -1,9 +1,7 @@
 import { useNavigate } from "react-router";
 import { Button } from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers";
-import { LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import dayjs from "dayjs";
+import ModelOutputTest from "../ModelOutputTest";
+import GameScheduleTable from "../components/GameScheduleTable";
 
 export default function Home() {
   let navigate = useNavigate();
@@ -12,14 +10,17 @@ export default function Home() {
     <Button variant="contained" onClick={() => navigate("/guide")}>User Guide</Button>
     <Button variant="contained" onClick={() => navigate("/simulation")}>Simulation</Button>
     <br />
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <DatePicker
-        defaultValue={dayjs()}
-        onChange={(newValue) => {
-          setValue(newValue);
-          console.log("Date changed: " + newValue);
-        }
-      }/>
-    </LocalizationProvider>
+    <div className="page">
+      <h1>Pitchcraft</h1>
+      <p>
+        API status:{" "}
+        <strong>
+          {status === "checking" ? "checking…" : status === "up" ? "UP" : "DOWN"}
+        </strong>
+      </p>
+
+      <ModelOutputTest />
+      <GameScheduleTable />
+    </div>
   </div>
 }

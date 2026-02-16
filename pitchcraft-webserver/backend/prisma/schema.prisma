@@ -22,3 +22,17 @@ model Player {
 
   @@map("players")
 }
+
+model Schedule {
+  game_id       BigInt   @id @default(autoincrement())
+  game_datetime DateTime
+  away_team     String   @db.VarChar(255)
+  away_team_id  Int
+  home_team     String   @db.VarChar(255)
+  home_team_id  Int
+  venue_id      Int
+  venue_name    String   @db.VarChar(255)
+  summary       String   @db.VarChar(255)
+
+  @@map("schedule")
+}
