@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router";
 import { Button } from "@mui/material";
-import ModelOutputTest from "../components/ModelOutputTest";
 import GameScheduleTable from "../components/GameScheduleTable";
 
 export default function Home() {
@@ -19,7 +18,6 @@ export default function Home() {
         </strong>
       </p>
 
-      <ModelOutputTest />
       <GameScheduleTable />
     </div>
   </div>
