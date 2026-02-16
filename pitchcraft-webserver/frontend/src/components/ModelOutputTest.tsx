@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Button, TextField, Typography } from "@mui/material";
 
 export default function ModelOutputTest() {
   const [reqText, setReqText] = useState<string>("");
@@ -46,23 +47,22 @@ export default function ModelOutputTest() {
 
   return (
     <div className="sim">
-      <h2>Model Predict</h2>
+      <Typography variant="h2">Model Predict</Typography>
 
       <div className="sim-grid">
-        <label>Request (raw JSON)</label>
-        <textarea
-          rows={10}
-          value={reqText}
+        <TextField
+          label="Request (raw JSON)"
+          multiline
           onChange={(e) => setReqText(e.target.value)}
         />
-
-        <label>Response</label>
-        <textarea rows={10} value={respText} readOnly spellCheck={false} />
+        <br />
+        <Typography variant="h6">Response</Typography>
+        <Typography variant="p">{respText}</Typography>
       </div>
 
-      <button className="btn" onClick={run} disabled={loading}>
+      <Button className="btn" variant="contained" onClick={run} disabled={loading}>
         {loading ? "Sending..." : "Send"}
-      </button>
+      </Button>
 
       {err && <pre className="pre pre-error">{err}</pre>}
     </div>
