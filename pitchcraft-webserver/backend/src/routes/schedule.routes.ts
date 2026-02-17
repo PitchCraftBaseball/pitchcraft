@@ -14,6 +14,7 @@ scheduleRouter.get("/date", async (req, res) => {
     return res.status(400).json({ error: "Invalid date" });
   }
 
+  // the server is in UTC right now. The client pre-formats the timestamp as UTC (GMT +0) to prevent offset when querying the DB
   const start = new Date(baseDate);
   start.setHours(0, 0, 0, 0);
 
