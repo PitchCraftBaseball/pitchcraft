@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Player } from "../types";
-import { TEAM_OPTIONS, PITCH_TYPES, INNING_OPTIONS } from "../shared";
+import { TEAMS, PITCH_TYPES, INNING_OPTIONS } from "../shared";
 import {
   Button,
   FormControl,
@@ -15,17 +15,25 @@ import {
   ToggleButtonGroup,
 } from "@mui/material";
 
-type SimulationProps = {
-  players?: Player[];
-};
+type TeamId = number | "";
 
-export default function Simulation({ players = [] }: SimulationProps) {
-  // Input
+async function fetchJson<T>(url: string): Promise<T> {
+  const r = await fetch(url);
+  const text = await r.text();
+  if (!r.ok) throw new Error(text || `Request failed (${r.status})`);
+  return JSON.parse(text) as T;
+}
+
+export default function Simulation() {
+  const [batTeamId, setBatTeamId] = useState<TeamId>("");
+  const [pitchTeamId, setPitchTeamId] = useState<TeamId>("");
+
+  const [batters, setBatters] = useState<Player[]>([]);
+  const [pitchers, setPitchers] = useState<Player[]>([]);
+
   const [batterId, setBatterId] = useState("");
   const [pitcherId, setPitcherId] = useState("");
-  // TODO actually connect to db and filter players by team
-  const [batTeam, setBatTeam] = useState("");
-  const [pitchTeam, setPitchTeam] = useState("");
+
   const [balls, setBalls] = useState(0);
   const [strikes, setStrikes] = useState(0);
   const [outs, setOuts] = useState(0);
@@ -36,28 +44,71 @@ export default function Simulation({ players = [] }: SimulationProps) {
   const [pitchScore, setPitchScore] = useState(0);
   const [prevPitchType, setPrevPitchType] = useState("FF");
 
-  // Output + functionality
   const [respText, setRespText] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
 
-  // Default to first player loaded
+  // Load batters when batting team changes
   useEffect(() => {
-    if (!players.length) return;
-    if (!batterId) setBatterId(String(players[0].id));
-    if (!pitcherId)
-      setPitcherId(String(players[Math.min(1, players.length - 1)].id));
-  }, [players, batterId, pitcherId]);
+    let cancelled = false;
 
-  // Names for batter/pitcher
+    async function load() {
+      setBatters([]);
+      setBatterId("");
+      if (!batTeamId) return;
+
+      try {
+        const rows = await fetchJson<Player[]>(`/api/teams/${batTeamId}/batters`);
+        if (cancelled) return;
+        setBatters(rows);
+        setBatterId(rows[0] ? String(rows[0].id) : "");
+      } catch (e) {
+        if (cancelled) return;
+        setErr(e instanceof Error ? e.message : String(e));
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [batTeamId]);
+
+  // Load pitchers when pitching team changes
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setPitchers([]);
+      setPitcherId("");
+      if (!pitchTeamId) return;
+
+      try {
+        const rows = await fetchJson<Player[]>(`/api/teams/${pitchTeamId}/pitchers`);
+        if (cancelled) return;
+        setPitchers(rows);
+        setPitcherId(rows[0] ? String(rows[0].id) : "");
+      } catch (e) {
+        if (cancelled) return;
+        setErr(e instanceof Error ? e.message : String(e));
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [pitchTeamId]);
+
   const batterLabel = useMemo(() => {
-    const p = players.find((x) => String(x.id) === String(batterId));
+    const p = batters.find((x) => String(x.id) === String(batterId));
     return p ? `${p.first_name} ${p.last_name}` : "";
-  }, [players, batterId]);
+  }, [batters, batterId]);
+
   const pitcherLabel = useMemo(() => {
-    const p = players.find((x) => String(x.id) === String(pitcherId));
+    const p = pitchers.find((x) => String(x.id) === String(pitcherId));
     return p ? `${p.first_name} ${p.last_name}` : "";
-  }, [players, pitcherId]);
+  }, [pitchers, pitcherId]);
 
   function pretty(j: string): string {
     try {
@@ -67,7 +118,6 @@ export default function Simulation({ players = [] }: SimulationProps) {
     }
   }
 
-  // Assemble input json
   function buildBody() {
     return {
       pitcher: String(pitcherId),
@@ -121,13 +171,11 @@ export default function Simulation({ players = [] }: SimulationProps) {
     );
   }
 
-  // Send request to model and render output
   async function run(): Promise<void> {
     setErr("");
     setRespText("");
 
     const body = buildBody();
-
     console.log("Request body:", body);
 
     setLoading(true);
@@ -161,13 +209,20 @@ export default function Simulation({ players = [] }: SimulationProps) {
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <FormControl fullWidth size="small">
             <FormLabel sx={{ mb: 0.5 }}>Bat Team</FormLabel>
-            <Select value={batTeam} onChange={(e) => setBatTeam(String(e.target.value))} displayEmpty>
+            <Select
+              value={batTeamId === "" ? "" : String(batTeamId)}
+              onChange={(e) => {
+                const v = e.target.value as string; // MUI select gives string
+                setBatTeamId(v === "" ? "" : Number(v));
+              }}
+              displayEmpty
+            >
               <MenuItem value="">
                 <em>Select…</em>
               </MenuItem>
-              {TEAM_OPTIONS.map((t) => (
-                <MenuItem key={t} value={t}>
-                  {t}
+              {TEAMS.map((t) => (
+                <MenuItem key={t.id} value={t.id}>
+                  {t.name}
                 </MenuItem>
               ))}
             </Select>
@@ -175,13 +230,20 @@ export default function Simulation({ players = [] }: SimulationProps) {
 
           <FormControl fullWidth size="small">
             <FormLabel sx={{ mb: 0.5 }}>Pitch Team</FormLabel>
-            <Select value={pitchTeam} onChange={(e) => setPitchTeam(String(e.target.value))} displayEmpty>
+            <Select
+              value={pitchTeamId === "" ? "" : String(pitchTeamId)}
+              onChange={(e) => {
+                const v = e.target.value as string; // MUI select gives string
+                setPitchTeamId(v === "" ? "" : Number(v));
+              }}
+              displayEmpty
+            >
               <MenuItem value="">
                 <em>Select…</em>
               </MenuItem>
-              {TEAM_OPTIONS.map((t) => (
-                <MenuItem key={t} value={t}>
-                  {t}
+              {TEAMS.map((t) => (
+                <MenuItem key={t.id} value={t.id}>
+                  {t.name}
                 </MenuItem>
               ))}
             </Select>
@@ -189,13 +251,13 @@ export default function Simulation({ players = [] }: SimulationProps) {
         </Stack>
 
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-          <FormControl fullWidth size="small">
+          <FormControl fullWidth size="small" disabled={!batTeamId}>
             <FormLabel sx={{ mb: 0.5 }}>Batter</FormLabel>
             <Select value={batterId} onChange={(e) => setBatterId(String(e.target.value))} displayEmpty>
               <MenuItem value="">
-                <em>Select…</em>
+                <em>{batTeamId ? "Select…" : "Select a team first…"}</em>
               </MenuItem>
-              {players.map((p) => (
+              {batters.map((p) => (
                 <MenuItem key={String(p.id)} value={String(p.id)}>
                   {p.first_name} {p.last_name} (id {p.id})
                 </MenuItem>
@@ -203,13 +265,13 @@ export default function Simulation({ players = [] }: SimulationProps) {
             </Select>
           </FormControl>
 
-          <FormControl fullWidth size="small">
+          <FormControl fullWidth size="small" disabled={!pitchTeamId}>
             <FormLabel sx={{ mb: 0.5 }}>Pitcher</FormLabel>
             <Select value={pitcherId} onChange={(e) => setPitcherId(String(e.target.value))} displayEmpty>
               <MenuItem value="">
-                <em>Select…</em>
+                <em>{pitchTeamId ? "Select…" : "Select a team first…"}</em>
               </MenuItem>
-              {players.map((p) => (
+              {pitchers.map((p) => (
                 <MenuItem key={String(p.id)} value={String(p.id)}>
                   {p.first_name} {p.last_name} (id {p.id})
                 </MenuItem>
@@ -219,22 +281,15 @@ export default function Simulation({ players = [] }: SimulationProps) {
         </Stack>
 
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-          <NumToggle label="Balls" value={balls} options={[0,1,2,3]} onChange={setBalls} />
-          <NumToggle label="Strikes" value={strikes} options={[0,1,2]} onChange={setStrikes} />
-          <NumToggle label="Outs" value={outs} options={[0,1,2]} onChange={setOuts} />
+          <NumToggle label="Balls" value={balls} options={[0, 1, 2, 3]} onChange={setBalls} />
+          <NumToggle label="Strikes" value={strikes} options={[0, 1, 2]} onChange={setStrikes} />
+          <NumToggle label="Outs" value={outs} options={[0, 1, 2]} onChange={setOuts} />
         </Stack>
 
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems="stretch">
           <FormControl size="small" sx={{ flex: 1 }}>
-            <FormLabel sx={{ mb: 0.5 }}>
-              Runners on
-            </FormLabel>
-
-            <ToggleButtonGroup
-              value={runnersOn}
-              onChange={(_, v) => setRunnersOn(v)}
-              size="small"
-            >
+            <FormLabel sx={{ mb: 0.5 }}>Runners on</FormLabel>
+            <ToggleButtonGroup value={runnersOn} onChange={(_, v) => setRunnersOn(v)} size="small">
               <ToggleButton value="1B" sx={{ flex: 1 }}>
                 1
               </ToggleButton>
@@ -302,7 +357,13 @@ export default function Simulation({ players = [] }: SimulationProps) {
           </FormControl>
         </Stack>
 
-        <Button variant="contained" size="large" fullWidth onClick={run} disabled={loading}>
+        <Button
+          variant="contained"
+          size="large"
+          fullWidth
+          onClick={run}
+          disabled={loading || !batterId || !pitcherId}
+        >
           {loading ? "Sending..." : "Get Pitch Sequence"}
         </Button>
 
@@ -313,6 +374,7 @@ export default function Simulation({ players = [] }: SimulationProps) {
           value={respText}
           minRows={6}
           fullWidth
+          multiline
         />
 
         <Typography variant="body2" color="text.secondary">
