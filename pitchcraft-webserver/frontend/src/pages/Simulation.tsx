@@ -291,13 +291,13 @@ export default function Simulation() {
             <FormLabel sx={{ mb: 0.5 }}>Runners on</FormLabel>
             <ToggleButtonGroup value={runnersOn} onChange={(_, v) => setRunnersOn(v)} size="small">
               <ToggleButton value="1B" sx={{ flex: 1 }}>
-                1
+                1B
               </ToggleButton>
               <ToggleButton value="2B" sx={{ flex: 1 }}>
-                2
+                2B
               </ToggleButton>
               <ToggleButton value="3B" sx={{ flex: 1 }}>
-                3
+                3B
               </ToggleButton>
             </ToggleButtonGroup>
           </FormControl>
