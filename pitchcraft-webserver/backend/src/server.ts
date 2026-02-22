@@ -64,6 +64,42 @@ app.post("/api/model/predict", async (req, res) => {
   }
 });
 
+// Get batters by team (position != 'P', TODO)
+app.get("/api/teams/:teamId/batters", async (req: Request, res: Response) => {
+  const teamId = Number(req.params.teamId);
+  if (!Number.isFinite(teamId)) return res.status(400).json({ error: "invalid_team_id" });
+  try {
+    const batters = await prisma.$queryRaw`
+      SELECT *
+      FROM players
+      WHERE team_id = ${teamId} AND position <> 'P'
+      ORDER BY last_name, first_name
+    `;
+    return res.json(batters);
+  } catch (e) {
+    console.error("failed_to_query_batters", e);
+    return res.status(500).json({ error: "failed_to_query_batters" });
+  }
+});
+
+// Get pitchers by team (position != 'P')
+app.get("/api/teams/:teamId/pitchers", async (req: Request, res: Response) => {
+  const teamId = Number(req.params.teamId);
+  if (!Number.isFinite(teamId)) return res.status(400).json({ error: "invalid_team_id" });
+  try {
+    const pitchers = await prisma.$queryRaw`
+      SELECT *
+      FROM players
+      WHERE team_id = ${teamId} AND position = 'P'
+      ORDER BY last_name, first_name
+    `;
+    return res.json(pitchers);
+  } catch (e) {
+    console.error("failed_to_query_pitchers", e);
+    return res.status(500).json({ error: "failed_to_query_pitchers" });
+  }
+});
+
 app.use("/api/schedule", scheduleRouter)
 app.use("/api", (_req: Request, res: Response) => res.status(404).json({ error: "not_found" }));
 
