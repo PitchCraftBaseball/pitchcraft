@@ -128,16 +128,6 @@ async function callPredict() {
     if (respErr === "model_base_url_not_configured") {
       throw Error("MODEL_BASE_URL is not configured, so /api/model/predict cannot be tested.");
     }
-
-    // Helpful hint for the exact situation you're in (502 from proxy)
-    if (error.response.status === 502 && respErr === "model_unreachable") {
-      throw Error(
-        "Backend returned 502 model_unreachable. That means the Node server cannot reach MODEL_BASE_URL from *its* network. " +
-          "If Node is running in Docker, localhost points to the container, not your host/model. Try MODEL_BASE_URL=host.docker.internal:3175 " +
-          "or the model container service name (e.g., model:3175)."
-      );
-    }
-
     throw err;
   }
 }
@@ -147,7 +137,7 @@ let dists: Array<[string, Record<string, unknown>]> = [];
 beforeAll(async () => {
   const data = await callPredict();
   dists = getPitchDistributions(data);
-}, 30000); // give hook enough time even if model warms up
+}, 30000);
 
 test("Model predict includes only expected pitch types", () => {
   for (const [label, dist] of dists) {
