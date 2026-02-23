@@ -4,7 +4,7 @@ import { prisma } from "../services/db.js";
 
 let playersRouter = express.Router();
 
-async function getPlayers(req: Request, res: Response, teamId: number, batters: bool) {
+async function getPlayers(req: Request, res: Response, teamId: number, batters: boolean) {
   if (Number.isNaN(teamId)) {
     return res.status(400).json({ error: "Invalid teamId" });
   }
