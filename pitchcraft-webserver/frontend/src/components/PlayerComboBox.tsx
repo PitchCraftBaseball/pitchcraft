@@ -26,7 +26,7 @@ export default function PlayerComboBox({ teamId, batters, value, onChange }) {
     return () => {
       ignore = true;
     }
-  }, []);
+  }, [teamId]);
 
   return (<Autocomplete
     value={value}

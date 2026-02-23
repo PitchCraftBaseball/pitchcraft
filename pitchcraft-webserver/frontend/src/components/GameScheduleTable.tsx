@@ -123,7 +123,13 @@ export default function GameScheduleTable() {
         onClose={closeReportPopup}
       >
         <Box sx={style}>
-          <Typography variant="h6" component="h2">baseball</Typography>
+          <Typography variant="h6" component="h2">Pitching: {pitchingTeam} Batting: {battingTeam}</Typography>
+          <Button variant="contained" onClick={() => {
+            const temp = pitchingTeam;
+            setPitchingTeam(battingTeam);
+            setBattingTeam(temp);
+            setPlayers(Array(10).fill(null));
+          }}>Swap</Button>
           <PlayerComboBox value={players[0]} teamId={pitchingTeam} batters={false} onChange={(event, newValue) => { updatePlayer(0, newValue) }}/>
           <PlayerComboBox value={players[1]} teamId={battingTeam} batters={true} onChange={(event, newValue) => { updatePlayer(1, newValue) }}/>
           <PlayerComboBox value={players[2]} teamId={battingTeam} batters={true} onChange={(event, newValue) => { updatePlayer(2, newValue) }}/>
