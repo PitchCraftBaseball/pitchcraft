@@ -52,4 +52,26 @@ export const PITCH_TYPES = [
   "FO",
 ] as const;
 
+export const PITCH_TYPE_NAMES: Record<string, string> = {
+  FF: "Four-seam Fastball",
+  SI: "Sinker",
+  FC: "Cutter",
+  FS: "Splitter",
+  CH: "Changeup",
+  SL: "Slider",
+  ST: "Sweeper",
+  CU: "Curveball",
+  KC: "Knuckle Curve",
+  FO: "Forkball",
+  EP: "Eephus",
+  SV: "Screwball",
+  FA: "Fastball",
+  OTHER: "Other",
+} as const;
+
+export function formatPitchType(code: string): string {
+  const name = PITCH_TYPE_NAMES[code];
+  return name ? `${code} (${name})` : code;
+}
+
 export const INNING_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9];

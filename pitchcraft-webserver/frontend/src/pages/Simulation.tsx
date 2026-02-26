@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import type { Player } from "../types";
-import { TEAMS, PITCH_TYPES, INNING_OPTIONS } from "../shared";
+import type { Player, TeamId, PitchProbMap, PredictResponse, PieSlice } from "../types";
+import { TEAMS, PITCH_TYPES, INNING_OPTIONS, formatPitchType } from "../shared";
 import {
   Button,
   FormControl,
@@ -14,8 +14,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from "@mui/material";
-
-type TeamId = number | "";
+import { PieChart } from "@mui/x-charts/PieChart";
 
 async function fetchJson<T>(url: string): Promise<T> {
   const r = await fetch(url);
@@ -44,60 +43,42 @@ export default function Simulation() {
   const [pitchScore, setPitchScore] = useState(0);
   const [prevPitchType, setPrevPitchType] = useState("FF");
 
-  const [respText, setRespText] = useState("");
+  const [pieData, setPieData] = useState<PieSlice[]>([]);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
 
   // Load batters when batting team changes
   useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
+    (async () => {
       setBatters([]);
       setBatterId("");
       if (!batTeamId) return;
 
       try {
         const rows = await fetchJson<Player[]>(`/api/teams/${batTeamId}/batters`);
-        if (cancelled) return;
         setBatters(rows);
         setBatterId(rows[0] ? String(rows[0].id) : "");
       } catch (e) {
-        if (cancelled) return;
         setErr(e instanceof Error ? e.message : String(e));
       }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
+    })();
   }, [batTeamId]);
 
   // Load pitchers when pitching team changes
   useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
+    (async () => {
       setPitchers([]);
-      setPitcherId("");
+      setBatterId("");
       if (!pitchTeamId) return;
 
       try {
         const rows = await fetchJson<Player[]>(`/api/teams/${pitchTeamId}/pitchers`);
-        if (cancelled) return;
         setPitchers(rows);
-        setPitcherId(rows[0] ? String(rows[0].id) : "");
+        setBatterId(rows[0] ? String(rows[0].id) : "");
       } catch (e) {
-        if (cancelled) return;
         setErr(e instanceof Error ? e.message : String(e));
       }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
+    })();
   }, [pitchTeamId]);
 
   const batterLabel = useMemo(() => {
@@ -110,12 +91,33 @@ export default function Simulation() {
     return p ? `${p.first_name} ${p.last_name}` : "";
   }, [pitchers, pitcherId]);
 
-  function pretty(j: string): string {
-    try {
-      return JSON.stringify(JSON.parse(j), null, 2);
-    } catch {
-      return j;
+  function buildPieData(probs: PitchProbMap): PieSlice[] {
+    const positive = Object.entries(probs)
+      .filter(([, p]) => p > 0)
+      .sort((a, b) => b[1] - a[1]);
+
+    // 1 to 5 pitches: show all
+    if (positive.length <= 5) {
+      return positive.map(([code, value]) => ({
+        id: code,
+        label: formatPitchType(code), // friendly name
+        value,
+      }));
     }
+
+    // >5 pitches: show top 4 + other bucket
+    const top4 = positive.slice(0, 4);
+    const rest = positive.slice(4);
+    const otherValue = rest.reduce((sum, [, p]) => sum + p, 0);
+
+    return [
+      ...top4.map(([code, value]) => ({
+        id: code,
+        label: formatPitchType(code), // friendly name
+        value,
+      })),
+      { id: "__other__", label: "Other", value: otherValue },
+    ];
   }
 
   function buildBody() {
@@ -173,7 +175,7 @@ export default function Simulation() {
 
   async function run(): Promise<void> {
     setErr("");
-    setRespText("");
+    setPieData([]);
 
     const body = buildBody();
     console.log("Request body:", body);
@@ -188,10 +190,12 @@ export default function Simulation() {
 
       const text = await r.text();
       if (!r.ok) {
-        setErr(pretty(text || `Request failed (${r.status})`));
+        setErr(text || `Request failed (${r.status})`);
         return;
       }
-      setRespText(pretty(text));
+
+      const payload = JSON.parse(text) as PredictResponse;
+      setPieData(buildPieData(payload.pitch_one));
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
     } finally {
@@ -324,7 +328,7 @@ export default function Simulation() {
 
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <FormControl fullWidth size="small">
-            <FormLabel sx={{ mb: 0.5 }}>Bat Score</FormLabel>
+            <FormLabel sx={{ mb: 0.5 }}>Bat Team Score</FormLabel>
             <TextField
               fullWidth
               size="small"
@@ -335,7 +339,7 @@ export default function Simulation() {
           </FormControl>
 
           <FormControl fullWidth size="small">
-            <FormLabel sx={{ mb: 0.5 }}>Pitch Score</FormLabel>
+            <FormLabel sx={{ mb: 0.5 }}>Pitch Team Score</FormLabel>
             <TextField
               fullWidth
               size="small"
@@ -350,7 +354,7 @@ export default function Simulation() {
             <Select value={prevPitchType} onChange={(e) => setPrevPitchType(String(e.target.value))}>
               {PITCH_TYPES.map((pt) => (
                 <MenuItem key={pt} value={pt}>
-                  {pt}
+                  {formatPitchType(pt)}
                 </MenuItem>
               ))}
             </Select>
@@ -369,13 +373,22 @@ export default function Simulation() {
 
         {err && <pre className="pre pre-error">{err}</pre>}
 
-        <TextField
-          label="Response"
-          value={respText}
-          minRows={6}
-          fullWidth
-          multiline
-        />
+        {pieData.length > 0 && (
+          <Paper variant="outlined" sx={{ p: 2 }}>
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>
+              Top pitch probabilities
+            </Typography>
+            <PieChart
+              height={260}
+              series={[
+                {
+                  data: pieData,
+                  valueFormatter: (item) => `${(item.value * 100).toFixed(1)}%`,
+                },
+              ]}
+            />
+          </Paper>
+        )}
 
         <Typography variant="body2" color="text.secondary">
           <b>Selected:</b> batter={batterLabel} pitcher={pitcherLabel}
