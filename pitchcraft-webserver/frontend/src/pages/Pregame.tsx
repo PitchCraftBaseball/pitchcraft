@@ -6,21 +6,21 @@ export default function Pregame() {
   const state = useLocation().state;
 
   useEffect(() => {
-    if (!state) {
+    if (!state || !"players" in state) {
       navigate("/");
     }
   });
 
   return <div>
-    <p>{state.players[0].id}</p>
-    <p>{state.players[1].id}</p>
-    <p>{state.players[2].id}</p>
-    <p>{state.players[3].id}</p>
-    <p>{state.players[4].id}</p>
-    <p>{state.players[5].id}</p>
-    <p>{state.players[6].id}</p>
-    <p>{state.players[7].id}</p>
-    <p>{state.players[8].id}</p>
-    <p>{state.players[9].id}</p>
-  </div>
+    <p>{state?.players[0].id}</p>
+    <p>{state?.players[1].id}</p>
+    <p>{state?.players[2].id}</p>
+    <p>{state?.players[3].id}</p>
+    <p>{state?.players[4].id}</p>
+    <p>{state?.players[5].id}</p>
+    <p>{state?.players[6].id}</p>
+    <p>{state?.players[7].id}</p>
+    <p>{state?.players[8].id}</p>
+    <p>{state?.players[9].id}</p>
+  </div>;
 }
