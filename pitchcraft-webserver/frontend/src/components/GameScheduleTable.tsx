@@ -5,9 +5,11 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
-import { Box, Button, Modal, Paper, Typography } from "@mui/material";
+import { Box, Button, IconButton, Modal, Paper, Typography } from "@mui/material";
 import PlayerComboBox from "../components/PlayerComboBox";
 import Player from "../types";
+import { TEAMS } from "../shared";
+import CloseIcon from "@mui/icons-material/Close";
 
 type ScheduleRow = {
   game_id: string;
@@ -49,11 +51,13 @@ export default function GameScheduleTable() {
     setOpen(true);
   }
 
-  const closeReportPopup = () => {
-    setPitchingTeam(0);
-    setBattingTeam(0);
-    setPlayers(Array(10).fill(null));
-    setOpen(false);
+  const closeReportPopup = (event, reason) => {
+    if (reason != "backdropClick") {
+      setPitchingTeam(0);
+      setBattingTeam(0);
+      setPlayers(Array(10).fill(null));
+      setOpen(false);
+    }
   }
 
   const updatePlayer = (index: number, player: Player) => {
@@ -78,6 +82,10 @@ export default function GameScheduleTable() {
     const data = (await response.json()) as ScheduleRow[];
     setScheduleRows(data);
   };
+
+  const getTeam = (id: string) => {
+    return TEAMS.find((x) => x.id == id);
+  }
 
   return (
     <div className="schedule">
@@ -123,7 +131,11 @@ export default function GameScheduleTable() {
         onClose={closeReportPopup}
       >
         <Box sx={style}>
-          <Typography variant="h6" component="h2">Pitching: {pitchingTeam} Batting: {battingTeam}</Typography>
+          <IconButton onClick={closeReportPopup}>
+            <CloseIcon />
+          </IconButton>
+          <Typography variant="h6" component="h2">Pitching: {getTeam(pitchingTeam)?.name ?? "Unknown Team"}</Typography>
+          <Typography variant="h6" component="h2">Batting: {getTeam(battingTeam)?.name ?? "Unknown Team"}</Typography>
           <Button variant="contained" onClick={() => {
             const temp = pitchingTeam;
             setPitchingTeam(battingTeam);
