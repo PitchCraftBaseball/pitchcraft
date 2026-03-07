@@ -25,16 +25,6 @@ app.get("/api/health", async (_req: Request, res: Response) => {
   }
 });
 
-// DB query example
-app.get("/api/players", async (_req: Request, res: Response) => {
-  try {
-    const players = await prisma.player?.findMany({ take: 25 });
-    res.json(players ?? []);
-  } catch {
-    res.status(500).json({ error: "failed_to_query_players" });
-  }
-});
-
 // Passthrough: Pitchcraft FE -> Pitchcraft BE -> Model API
 app.get("/api/model/health", async (_req, res) => {
   if (!modelBaseUrl) return res.status(500).json({ error: "model_base_url_not_configured" });
@@ -65,7 +55,7 @@ app.post("/api/model/predict", async (req, res) => {
   }
 });
 
-// Get batters by team (position != 'P', TODO)
+// Get batters by team
 app.get("/api/teams/:teamId/batters", async (req: Request, res: Response) => {
   const teamId = Number(req.params.teamId);
   if (!Number.isFinite(teamId)) return res.status(400).json({ error: "invalid_team_id" });
@@ -83,7 +73,7 @@ app.get("/api/teams/:teamId/batters", async (req: Request, res: Response) => {
   }
 });
 
-// Get pitchers by team (position != 'P')
+// Get pitchers by team
 app.get("/api/teams/:teamId/pitchers", async (req: Request, res: Response) => {
   const teamId = Number(req.params.teamId);
   if (!Number.isFinite(teamId)) return res.status(400).json({ error: "invalid_team_id" });
@@ -101,8 +91,8 @@ app.get("/api/teams/:teamId/pitchers", async (req: Request, res: Response) => {
   }
 });
 
-app.use("/api/schedule", scheduleRouter)
-app.use("/api/players", playersRouter)
+app.use("/api/schedule", scheduleRouter);
+app.use("/api/players", playersRouter);
 app.use("/api", (_req: Request, res: Response) => res.status(404).json({ error: "not_found" }));
 
 app.listen(PORT, () => {

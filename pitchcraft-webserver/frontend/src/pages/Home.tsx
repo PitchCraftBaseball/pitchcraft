@@ -3,7 +3,7 @@ import { Button } from "@mui/material";
 import GameScheduleTable from "../components/GameScheduleTable";
 
 export default function Home() {
-  let navigate = useNavigate();
+  const navigate = useNavigate();
 
   return <div>
     <Button variant="contained" onClick={() => navigate("/guide")}>User Guide</Button>
