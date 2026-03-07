@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { Player } from "../types";
-import { TEAMS, PITCH_TYPES, INNING_OPTIONS } from "../shared";
+import { TEAMS, PITCH_TYPES, INNING_OPTIONS, formatPitchType } from "../shared";
 import {
   Button,
   FormControl,
@@ -14,26 +14,20 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from "@mui/material";
+import PlayerComboBox from "../components/PlayerComboBox";
 
 type TeamId = number | "";
 
-async function fetchJson<T>(url: string): Promise<T> {
-  const r = await fetch(url);
-  const text = await r.text();
-  if (!r.ok) throw new Error(text || `Request failed (${r.status})`);
-  return JSON.parse(text) as T;
-}
-
 export default function Simulation() {
+  // Team selection
   const [batTeamId, setBatTeamId] = useState<TeamId>("");
   const [pitchTeamId, setPitchTeamId] = useState<TeamId>("");
 
-  const [batters, setBatters] = useState<Player[]>([]);
-  const [pitchers, setPitchers] = useState<Player[]>([]);
+  // Player selection — full Player object so we have the name and id together
+  const [batter, setBatter] = useState<Player | null>(null);
+  const [pitcher, setPitcher] = useState<Player | null>(null);
 
-  const [batterId, setBatterId] = useState("");
-  const [pitcherId, setPitcherId] = useState("");
-
+  // Game state
   const [balls, setBalls] = useState(0);
   const [strikes, setStrikes] = useState(0);
   const [outs, setOuts] = useState(0);
@@ -48,67 +42,24 @@ export default function Simulation() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
 
-  // Load batters when batting team changes
-  useEffect(() => {
-    let cancelled = false;
+  // When team changes, clear the player selection too
+  function handleBatTeamChange(teamId: TeamId) {
+    setBatTeamId(teamId);
+    setBatter(null);
+  }
 
-    async function load() {
-      setBatters([]);
-      setBatterId("");
-      if (!batTeamId) return;
-
-      try {
-        const rows = await fetchJson<Player[]>(`/api/teams/${batTeamId}/batters`);
-        if (cancelled) return;
-        setBatters(rows);
-        setBatterId(rows[0] ? String(rows[0].id) : "");
-      } catch (e) {
-        if (cancelled) return;
-        setErr(e instanceof Error ? e.message : String(e));
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [batTeamId]);
-
-  // Load pitchers when pitching team changes
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setPitchers([]);
-      setPitcherId("");
-      if (!pitchTeamId) return;
-
-      try {
-        const rows = await fetchJson<Player[]>(`/api/teams/${pitchTeamId}/pitchers`);
-        if (cancelled) return;
-        setPitchers(rows);
-        setPitcherId(rows[0] ? String(rows[0].id) : "");
-      } catch (e) {
-        if (cancelled) return;
-        setErr(e instanceof Error ? e.message : String(e));
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [pitchTeamId]);
+  function handlePitchTeamChange(teamId: TeamId) {
+    setPitchTeamId(teamId);
+    setPitcher(null);
+  }
 
   const batterLabel = useMemo(() => {
-    const p = batters.find((x) => String(x.id) === String(batterId));
-    return p ? `${p.first_name} ${p.last_name}` : "";
-  }, [batters, batterId]);
+    return batter ? `${batter.first_name} ${batter.last_name}` : "";
+  }, [batter]);
 
   const pitcherLabel = useMemo(() => {
-    const p = pitchers.find((x) => String(x.id) === String(pitcherId));
-    return p ? `${p.first_name} ${p.last_name}` : "";
-  }, [pitchers, pitcherId]);
+    return pitcher ? `${pitcher.first_name} ${pitcher.last_name}` : "";
+  }, [pitcher]);
 
   function pretty(j: string): string {
     try {
@@ -120,8 +71,8 @@ export default function Simulation() {
 
   function buildBody() {
     return {
-      pitcher: String(pitcherId),
-      batter: String(batterId),
+      pitcher: String(pitcher?.id ?? ""),
+      batter: String(batter?.id ?? ""),
       state_features: {
         inning_topbot: inningHalf === "top" ? "Top" : "Bottom",
         count_state: `${balls}-${strikes}`,
@@ -206,24 +157,22 @@ export default function Simulation() {
       </Typography>
 
       <Stack spacing={2}>
+
+        {/* Team selectors */}
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <FormControl fullWidth size="small">
             <FormLabel sx={{ mb: 0.5 }}>Bat Team</FormLabel>
             <Select
               value={batTeamId === "" ? "" : String(batTeamId)}
               onChange={(e) => {
-                const v = e.target.value as string; // MUI select gives string
-                setBatTeamId(v === "" ? "" : Number(v));
+                const v = e.target.value as string;
+                handleBatTeamChange(v === "" ? "" : Number(v));
               }}
               displayEmpty
             >
-              <MenuItem value="">
-                <em>Select…</em>
-              </MenuItem>
+              <MenuItem value=""><em>Select…</em></MenuItem>
               {TEAMS.map((t) => (
-                <MenuItem key={t.id} value={t.id}>
-                  {t.name}
-                </MenuItem>
+                <MenuItem key={t.id} value={t.id}>{t.name}</MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -233,72 +182,57 @@ export default function Simulation() {
             <Select
               value={pitchTeamId === "" ? "" : String(pitchTeamId)}
               onChange={(e) => {
-                const v = e.target.value as string; // MUI select gives string
-                setPitchTeamId(v === "" ? "" : Number(v));
+                const v = e.target.value as string;
+                handlePitchTeamChange(v === "" ? "" : Number(v));
               }}
               displayEmpty
             >
-              <MenuItem value="">
-                <em>Select…</em>
-              </MenuItem>
+              <MenuItem value=""><em>Select…</em></MenuItem>
               {TEAMS.map((t) => (
-                <MenuItem key={t.id} value={t.id}>
-                  {t.name}
-                </MenuItem>
+                <MenuItem key={t.id} value={t.id}>{t.name}</MenuItem>
               ))}
             </Select>
           </FormControl>
         </Stack>
 
+        {/* Player selectors — using PlayerComboBox */}
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-          <FormControl fullWidth size="small" disabled={!batTeamId}>
+          <FormControl fullWidth size="small">
             <FormLabel sx={{ mb: 0.5 }}>Batter</FormLabel>
-            <Select value={batterId} onChange={(e) => setBatterId(String(e.target.value))} displayEmpty>
-              <MenuItem value="">
-                <em>{batTeamId ? "Select…" : "Select a team first…"}</em>
-              </MenuItem>
-              {batters.map((p) => (
-                <MenuItem key={String(p.id)} value={String(p.id)}>
-                  {p.first_name} {p.last_name} (id {p.id})
-                </MenuItem>
-              ))}
-            </Select>
+            <PlayerComboBox
+              teamId={batTeamId}
+              batters={true}
+              value={batter}
+              onChange={setBatter}
+            />
           </FormControl>
 
-          <FormControl fullWidth size="small" disabled={!pitchTeamId}>
+          <FormControl fullWidth size="small">
             <FormLabel sx={{ mb: 0.5 }}>Pitcher</FormLabel>
-            <Select value={pitcherId} onChange={(e) => setPitcherId(String(e.target.value))} displayEmpty>
-              <MenuItem value="">
-                <em>{pitchTeamId ? "Select…" : "Select a team first…"}</em>
-              </MenuItem>
-              {pitchers.map((p) => (
-                <MenuItem key={String(p.id)} value={String(p.id)}>
-                  {p.first_name} {p.last_name} (id {p.id})
-                </MenuItem>
-              ))}
-            </Select>
+            <PlayerComboBox
+              teamId={pitchTeamId}
+              batters={false}
+              value={pitcher}
+              onChange={setPitcher}
+            />
           </FormControl>
         </Stack>
 
+        {/* Count / outs */}
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-          <NumToggle label="Balls" value={balls} options={[0, 1, 2, 3]} onChange={setBalls} />
-          <NumToggle label="Strikes" value={strikes} options={[0, 1, 2]} onChange={setStrikes} />
-          <NumToggle label="Outs" value={outs} options={[0, 1, 2]} onChange={setOuts} />
+          <NumToggle label="Balls"   value={balls}   options={[0, 1, 2, 3]} onChange={setBalls} />
+          <NumToggle label="Strikes" value={strikes} options={[0, 1, 2]}    onChange={setStrikes} />
+          <NumToggle label="Outs"    value={outs}    options={[0, 1, 2]}    onChange={setOuts} />
         </Stack>
 
+        {/* Runners / inning */}
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems="stretch">
           <FormControl size="small" sx={{ flex: 1 }}>
             <FormLabel sx={{ mb: 0.5 }}>Runners on</FormLabel>
             <ToggleButtonGroup value={runnersOn} onChange={(_, v) => setRunnersOn(v)} size="small">
-              <ToggleButton value="1B" sx={{ flex: 1 }}>
-                1B
-              </ToggleButton>
-              <ToggleButton value="2B" sx={{ flex: 1 }}>
-                2B
-              </ToggleButton>
-              <ToggleButton value="3B" sx={{ flex: 1 }}>
-                3B
-              </ToggleButton>
+              <ToggleButton value="1B" sx={{ flex: 1 }}>1B</ToggleButton>
+              <ToggleButton value="2B" sx={{ flex: 1 }}>2B</ToggleButton>
+              <ToggleButton value="3B" sx={{ flex: 1 }}>3B</ToggleButton>
             </ToggleButtonGroup>
           </FormControl>
 
@@ -314,14 +248,13 @@ export default function Simulation() {
             <FormLabel sx={{ mb: 0.5 }}>Inning</FormLabel>
             <Select value={inning} onChange={(e) => setInning(Number(e.target.value))}>
               {INNING_OPTIONS.map((n) => (
-                <MenuItem key={n} value={n}>
-                  {n}
-                </MenuItem>
+                <MenuItem key={n} value={n}>{n}</MenuItem>
               ))}
             </Select>
           </FormControl>
         </Stack>
 
+        {/* Score inputs */}
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <FormControl fullWidth size="small">
             <FormLabel sx={{ mb: 0.5 }}>Bat Score</FormLabel>
@@ -349,9 +282,7 @@ export default function Simulation() {
             <FormLabel sx={{ mb: 0.5 }}>Previous pitch type</FormLabel>
             <Select value={prevPitchType} onChange={(e) => setPrevPitchType(String(e.target.value))}>
               {PITCH_TYPES.map((pt) => (
-                <MenuItem key={pt} value={pt}>
-                  {pt}
-                </MenuItem>
+                <MenuItem key={pt} value={pt}>{formatPitchType(pt)}</MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -362,7 +293,7 @@ export default function Simulation() {
           size="large"
           fullWidth
           onClick={run}
-          disabled={loading || !batterId || !pitcherId}
+          disabled={loading || !batter || !pitcher}
         >
           {loading ? "Sending..." : "Get Pitch Sequence"}
         </Button>
@@ -380,6 +311,7 @@ export default function Simulation() {
         <Typography variant="body2" color="text.secondary">
           <b>Selected:</b> batter={batterLabel} pitcher={pitcherLabel}
         </Typography>
+
       </Stack>
     </Paper>
   );
