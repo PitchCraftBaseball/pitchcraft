@@ -52,6 +52,7 @@ export default function PlayerComboBox({ teamId, batters, value, onChange }: Pla
       options={players}
       getOptionLabel={(option) => `${option.first_name} ${option.last_name}`}
       getOptionKey={(option) => String(option.id)}
+      isOptionEqualToValue={(option, value) => String(option.id) === String(value.id)}
       disabled={!teamId}
       renderInput={(params) => (
         <TextField

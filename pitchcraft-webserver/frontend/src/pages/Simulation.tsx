@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { Player } from "../types";
+import type { Player, PitchProbMap, PredictResponse, PieSlice } from "../types";
 import { TEAMS, PITCH_TYPES, INNING_OPTIONS, formatPitchType } from "../shared";
 import {
   Button,
@@ -14,6 +14,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from "@mui/material";
+import { PieChart } from "@mui/x-charts/PieChart";
 import PlayerComboBox from "../components/PlayerComboBox";
 
 type TeamId = number | "";
@@ -38,6 +39,8 @@ export default function Simulation() {
   const [pitchScore, setPitchScore] = useState(0);
   const [prevPitchType, setPrevPitchType] = useState("FF");
 
+  // Output
+  const [pieData, setPieData] = useState<PieSlice[]>([]);
   const [respText, setRespText] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
@@ -67,6 +70,34 @@ export default function Simulation() {
     } catch {
       return j;
     }
+  }
+
+  function buildPieData(probs: PitchProbMap): PieSlice[] {
+    const positive = Object.entries(probs)
+      .filter(([, p]) => p > 0)
+      .sort((a, b) => b[1] - a[1]);
+
+    // 5 or fewer: show all
+    if (positive.length <= 5) {
+      return positive.map(([code, value]) => ({
+        id: code,
+        label: formatPitchType(code),
+        value,
+      }));
+    }
+
+    // More than 5: top 4 + other bucket
+    const top4 = positive.slice(0, 4);
+    const rest = positive.slice(4);
+    const otherValue = rest.reduce((sum, [, p]) => sum + p, 0);
+
+    const slices: PieSlice[] = top4.map(([code, value]) => ({
+      id: code,
+      label: formatPitchType(code),
+      value,
+    }));
+    slices.push({ id: "__other__", label: "Other", value: otherValue });
+    return slices;
   }
 
   function buildBody() {
@@ -124,6 +155,7 @@ export default function Simulation() {
 
   async function run(): Promise<void> {
     setErr("");
+    setPieData([]);
     setRespText("");
 
     const body = buildBody();
@@ -142,7 +174,12 @@ export default function Simulation() {
         setErr(pretty(text || `Request failed (${r.status})`));
         return;
       }
+
       setRespText(pretty(text));
+      const payload = JSON.parse(text) as PredictResponse;
+      if (payload.pitch_one) {
+        setPieData(buildPieData(payload.pitch_one));
+      }
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
     } finally {
@@ -299,6 +336,23 @@ export default function Simulation() {
         </Button>
 
         {err && <pre className="pre pre-error">{err}</pre>}
+
+        {pieData.length > 0 && (
+          <Paper variant="outlined" sx={{ p: 2 }}>
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>
+              Top pitch probabilities
+            </Typography>
+            <PieChart
+              height={260}
+              series={[
+                {
+                  data: pieData,
+                  valueFormatter: (item) => `${(item.value * 100).toFixed(1)}%`,
+                },
+              ]}
+            />
+          </Paper>
+        )}
 
         <TextField
           label="Response"
