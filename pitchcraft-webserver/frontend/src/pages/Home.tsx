@@ -3,7 +3,7 @@ import { Button } from "@mui/material";
 import GameScheduleTable from "../components/GameScheduleTable";
 
 export default function Home() {
-  let navigate = useNavigate();
+  const navigate = useNavigate();
 
   return <div>
     <Button variant="contained" onClick={() => navigate("/guide")}>User Guide</Button>
@@ -11,12 +11,6 @@ export default function Home() {
     <br />
     <div className="page">
       <h1>Pitchcraft</h1>
-      <p>
-        API status:{" "}
-        <strong>
-          {status === "checking" ? "checking…" : status === "up" ? "UP" : "DOWN"}
-        </strong>
-      </p>
 
       <GameScheduleTable />
     </div>
