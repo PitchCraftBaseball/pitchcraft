@@ -4,6 +4,7 @@ import morgan from "morgan";
 import cors from "cors";
 import { prisma } from "./services/db.js";
 import scheduleRouter from "./routes/schedule.routes.js";
+import playersRouter from "./routes/players.routes.js";
 
 const PORT = Number(process.env.PORT || 8000);
 const modelBaseUrl = process.env.MODEL_BASE_URL;
@@ -21,16 +22,6 @@ app.get("/api/health", async (_req: Request, res: Response) => {
     res.json({ ok: true, db: "up" });
   } catch {
     res.status(500).json({ ok: false, error: "db_unreachable" });
-  }
-});
-
-// DB query example
-app.get("/api/players", async (_req: Request, res: Response) => {
-  try {
-    const players = await prisma.player?.findMany({ take: 25 });
-    res.json(players ?? []);
-  } catch {
-    res.status(500).json({ error: "failed_to_query_players" });
   }
 });
 
@@ -64,7 +55,8 @@ app.post("/api/model/predict", async (req, res) => {
   }
 });
 
-app.use("/api/schedule", scheduleRouter)
+app.use("/api/schedule", scheduleRouter);
+app.use("/api/players", playersRouter);
 app.use("/api", (_req: Request, res: Response) => res.status(404).json({ error: "not_found" }));
 
 app.listen(PORT, () => {
