@@ -11,3 +11,8 @@ export interface Player {
   weight: number;
   jersey_number: number;
 }
+
+export type TeamId = number | "";
+export type PitchProbMap = Record<string, number>;
+export type PieSlice = { id: string; value: number; label: string };
+export type PredictResponse = { pitch_one: PitchProbMap };

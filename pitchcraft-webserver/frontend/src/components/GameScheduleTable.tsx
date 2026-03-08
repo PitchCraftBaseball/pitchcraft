@@ -142,16 +142,16 @@ export default function GameScheduleTable() {
             setBattingTeam(temp);
             setPlayers(Array(10).fill(null));
           }}>Swap</Button>
-          <PlayerComboBox value={players[0]} teamId={pitchingTeam} batters={false} onChange={(event, newValue) => { updatePlayer(0, newValue) }}/>
-          <PlayerComboBox value={players[1]} teamId={battingTeam} batters={true} onChange={(event, newValue) => { updatePlayer(1, newValue) }}/>
-          <PlayerComboBox value={players[2]} teamId={battingTeam} batters={true} onChange={(event, newValue) => { updatePlayer(2, newValue) }}/>
-          <PlayerComboBox value={players[3]} teamId={battingTeam} batters={true} onChange={(event, newValue) => { updatePlayer(3, newValue) }}/>
-          <PlayerComboBox value={players[4]} teamId={battingTeam} batters={true} onChange={(event, newValue) => { updatePlayer(4, newValue) }}/>
-          <PlayerComboBox value={players[5]} teamId={battingTeam} batters={true} onChange={(event, newValue) => { updatePlayer(5, newValue) }}/>
-          <PlayerComboBox value={players[6]} teamId={battingTeam} batters={true} onChange={(event, newValue) => { updatePlayer(6, newValue) }}/>
-          <PlayerComboBox value={players[7]} teamId={battingTeam} batters={true} onChange={(event, newValue) => { updatePlayer(7, newValue) }}/>
-          <PlayerComboBox value={players[8]} teamId={battingTeam} batters={true} onChange={(event, newValue) => { updatePlayer(8, newValue) }}/>
-          <PlayerComboBox value={players[9]} teamId={battingTeam} batters={true} onChange={(event, newValue) => { updatePlayer(9, newValue) }}/>
+          <PlayerComboBox value={players[0]} teamId={pitchingTeam} batters={false} onChange={(newValue) => { updatePlayer(0, newValue) }}/>
+          <PlayerComboBox value={players[1]} teamId={battingTeam} batters={true} onChange={(newValue) => { updatePlayer(1, newValue) }}/>
+          <PlayerComboBox value={players[2]} teamId={battingTeam} batters={true} onChange={(newValue) => { updatePlayer(2, newValue) }}/>
+          <PlayerComboBox value={players[3]} teamId={battingTeam} batters={true} onChange={(newValue) => { updatePlayer(3, newValue) }}/>
+          <PlayerComboBox value={players[4]} teamId={battingTeam} batters={true} onChange={(newValue) => { updatePlayer(4, newValue) }}/>
+          <PlayerComboBox value={players[5]} teamId={battingTeam} batters={true} onChange={(newValue) => { updatePlayer(5, newValue) }}/>
+          <PlayerComboBox value={players[6]} teamId={battingTeam} batters={true} onChange={(newValue) => { updatePlayer(6, newValue) }}/>
+          <PlayerComboBox value={players[7]} teamId={battingTeam} batters={true} onChange={(newValue) => { updatePlayer(7, newValue) }}/>
+          <PlayerComboBox value={players[8]} teamId={battingTeam} batters={true} onChange={(newValue) => { updatePlayer(8, newValue) }}/>
+          <PlayerComboBox value={players[9]} teamId={battingTeam} batters={true} onChange={(newValue) => { updatePlayer(9, newValue) }}/>
           <Button variant="contained" onClick={() => {
             navigate("/pregame", { state: { players: players } });
           }} disabled={players.filter(player => player != null).length != 10}>Continue</Button>

@@ -1,41 +1,67 @@
-import { cache, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Autocomplete, TextField } from "@mui/material";
-import Player from "../types";
+import type { Player } from "../types";
 
-const lookUpPlayers = cache(async (teamId: number, batters: bool): Player[] => {
-  const response = await fetch(`api/players/${batters ? "batters" : "pitchers"}?teamId=${teamId}`);
+// Fetches batters or pitchers for a given teamId.
+// Returns an empty array on error so the combo box just shows nothing.
+async function fetchPlayers(teamId: number, batters: boolean): Promise<Player[]> {
+  const endpoint = batters
+    ? `/api/players/batters?teamId=${teamId}`
+    : `/api/players/pitchers?teamId=${teamId}`;
 
+  const response = await fetch(endpoint);
   if (!response.ok) {
-    return;
+    console.error(`Failed to fetch players for team ${teamId}: ${response.status}`);
+    return [];
   }
-
   return (await response.json()) as Player[];
-});
+}
 
-export default function PlayerComboBox({ teamId, batters, value, onChange }) {
-    const [players, setPlayers] = useState([]);
+interface PlayerComboBoxProps {
+  teamId: number | "";
+  batters: boolean;
+  value: Player | null;
+  onChange: (player: Player | null) => void;
+}
+
+export default function PlayerComboBox({ teamId, batters, value, onChange }: PlayerComboBoxProps) {
+  const [players, setPlayers] = useState<Player[]>([]);
+
   useEffect(() => {
-    let ignore = false;
     setPlayers([]);
-    lookUpPlayers(teamId, batters).then(result => {
-      if (!ignore) {
+
+    if (!teamId) return;
+
+    let cancelled = false;
+
+    fetchPlayers(teamId, batters).then((result) => {
+      if (!cancelled) {
         setPlayers(result);
       }
     });
 
     return () => {
-      ignore = true;
-    }
-  }, [teamId]);
+      cancelled = true;
+    };
+  }, [teamId, batters]);
 
-  return (<Autocomplete
-    value={value}
-    onChange={onChange}
-    options={players}
-    getOptionLabel={(option) => `${option.first_name} ${option.last_name}`}
-    getOptionKey={(option) => option.id}
-    renderInput={(params) => (
-      <TextField {...params} label={batters ? "Select Batter" : "Select Pitcher"} variant="standard" />
-    )}
-  />);
+  return (
+    <Autocomplete
+      value={value}
+      onChange={(_event, newValue) => onChange(newValue)}
+      options={players}
+      getOptionLabel={(option) => `${option.first_name} ${option.last_name}`}
+      getOptionKey={(option) => String(option.id)}
+      isOptionEqualToValue={(option, value) => String(option.id) === String(value.id)}
+      disabled={!teamId}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          label={batters ? "Select Batter" : "Select Pitcher"}
+          variant="standard"
+          placeholder={teamId ? "Search…" : "Select a team first…"}
+        />
+      )}
+    />
+  );
 }

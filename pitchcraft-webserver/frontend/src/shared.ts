@@ -1,3 +1,7 @@
+// shared.ts
+export type Team = { id: number; name: string };
+
+// MLB Stats API team ids (sportId=1)
 export const TEAMS: Team[] = [
   { id: 109, name: "Arizona Diamondbacks" },
   { id: 133, name: "Athletics" },
@@ -30,3 +34,44 @@ export const TEAMS: Team[] = [
   { id: 141, name: "Toronto Blue Jays" },
   { id: 120, name: "Washington Nationals" },
 ];
+
+export const PITCH_TYPES = [
+  "SL",
+  "FF",
+  "FS",
+  "SI",
+  "ST",
+  "CU",
+  "KC",
+  "FC",
+  "CH",
+  "FA",
+  "SV",
+  "OTHER",
+  "EP",
+  "FO",
+] as const;
+
+export const PITCH_TYPE_NAMES: Record<string, string> = {
+  FF: "Four-seam Fastball",
+  SI: "Sinker",
+  FC: "Cutter",
+  FS: "Splitter",
+  CH: "Changeup",
+  SL: "Slider",
+  ST: "Sweeper",
+  CU: "Curveball",
+  KC: "Knuckle Curve",
+  FO: "Forkball",
+  EP: "Eephus",
+  SV: "Screwball",
+  FA: "Fastball",
+  OTHER: "Other",
+} as const;
+
+export function formatPitchType(code: string): string {
+  const name = PITCH_TYPE_NAMES[code];
+  return name ? `${code} (${name})` : code;
+}
+
+export const INNING_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
