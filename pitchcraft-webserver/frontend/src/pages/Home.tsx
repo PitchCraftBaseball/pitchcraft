@@ -11,12 +11,6 @@ export default function Home() {
     <br />
     <div className="page">
       <h1>Pitchcraft</h1>
-      <p>
-        API status:{" "}
-        <strong>
-          {status === "checking" ? "checking…" : status === "up" ? "UP" : "DOWN"}
-        </strong>
-      </p>
 
       <GameScheduleTable />
     </div>
