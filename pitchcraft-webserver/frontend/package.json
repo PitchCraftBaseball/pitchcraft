@@ -16,6 +16,7 @@
     "@mui/material": "^7.3.8",
     "@mui/x-date-pickers": "^8.27.0",
     "dayjs": "^1.11.19",
+    "dayjs-plugin-utc": "^0.1.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router": "^7.13.0",

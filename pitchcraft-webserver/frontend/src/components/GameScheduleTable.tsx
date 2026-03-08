@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import dayjs, { Dayjs } from "dayjs";
+import utc from "dayjs/plugin/utc";
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -23,6 +24,7 @@ type ScheduleRow = {
   summary: string;
 };
 
+dayjs.extend(utc);
 const style = {
   position: "absolute",
   top: "50%",
@@ -72,7 +74,7 @@ export default function GameScheduleTable() {
     }
     setGameDate(date);
     const response = await fetch(
-      `api/schedule/date?date=${encodeURIComponent(date.toISOString())}`
+      `api/schedule/date?date=${encodeURIComponent(date.utc().toISOString())}`
     );
 
     if (!response.ok) {
