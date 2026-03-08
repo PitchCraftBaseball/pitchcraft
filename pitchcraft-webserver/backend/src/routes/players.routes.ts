@@ -16,6 +16,7 @@ async function getPlayers(req: Request, res: Response, batters: boolean) {
       where: {
         team_id: teamId,
         position: batters ? { not: "P" } : "P",
+        active: { not: false },
       },
       orderBy: [{ last_name: "asc" }, { first_name: "asc" }],
     });

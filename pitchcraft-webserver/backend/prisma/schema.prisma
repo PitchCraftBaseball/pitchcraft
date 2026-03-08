@@ -19,6 +19,7 @@ model Player {
   height        Int?
   weight        Int?
   jersey_number Int?
+  active        Boolean?
 
   @@map("players")
 }
