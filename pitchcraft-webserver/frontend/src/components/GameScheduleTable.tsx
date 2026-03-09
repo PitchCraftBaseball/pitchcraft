@@ -25,6 +25,7 @@ type ScheduleRow = {
 };
 
 dayjs.extend(utc);
+
 const style = {
   position: "absolute",
   top: "50%",
@@ -73,8 +74,10 @@ export default function GameScheduleTable() {
       return; 
     }
     setGameDate(date);
+    const dateString = date.format("YYYY-MM-DD");
+    const tzOffsetMinutes = date.utcOffset();
     const response = await fetch(
-      `api/schedule/date?date=${encodeURIComponent(date.utc().toISOString())}`
+      `api/schedule/date?date=${encodeURIComponent(dateString)}&tzOffsetMinutes=${encodeURIComponent(tzOffsetMinutes)}`
     );
 
     if (!response.ok) {
