@@ -47,13 +47,14 @@ export default function PlayerComboBox({ teamId, batters, value, onChange }: Pla
 
   return (
     <Autocomplete
-      value={value}
+      value={value!}
       onChange={(_event, newValue) => onChange(newValue)}
       options={players}
       getOptionLabel={(option) => `${option.first_name} ${option.last_name}`}
       getOptionKey={(option) => String(option.id)}
       isOptionEqualToValue={(option, value) => String(option.id) === String(value.id)}
       disabled={!teamId}
+      disableClearable={true}
       renderInput={(params) => (
         <TextField
           {...params}

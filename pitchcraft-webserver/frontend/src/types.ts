@@ -7,6 +7,8 @@ export interface Player {
   position: string;
   batting_side: string;
   throwing_arm: string;
+  use_first_name: string;
+  use_last_name: string;
   height: number;
   weight: number;
   jersey_number: number;
