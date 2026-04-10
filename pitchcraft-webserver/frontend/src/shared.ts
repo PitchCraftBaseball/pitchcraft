@@ -74,4 +74,14 @@ export function formatPitchType(code: string): string {
   return name ? `${code} (${name})` : code;
 }
 
-export const INNING_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+export const INNING_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+import pitchArsenal from "./data/pitch_arsenal.json";
+
+type ArsenalEntry = { "2024"?: { pitch_type: Record<string, number> }; "2025"?: { pitch_type: Record<string, number> } };
+
+export function getPitcherArsenal(playerId: string | number): string[] {
+  const entry = (pitchArsenal as Record<string, ArsenalEntry>)[String(playerId)];
+  if (!entry) return [];
+  const year = entry["2025"] ?? entry["2024"];
+  return year ? Object.keys(year.pitch_type) : [];
+}
