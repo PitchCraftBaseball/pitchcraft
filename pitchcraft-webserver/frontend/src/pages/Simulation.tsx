@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { Player, PitchProbMap, PredictResponse, PieSlice } from "../types";
+import type { Player, PitchProbMap, PieSlice } from "../types";
 import { TEAMS, PITCH_TYPES, INNING_OPTIONS, formatPitchType } from "../shared";
 import {
   Button,
@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 import { PieChart } from "@mui/x-charts/PieChart";
 import PlayerComboBox from "../components/PlayerComboBox";
+import ModelGateway from "../modelGateway";
 
 type TeamId = number | "";
 
@@ -45,6 +46,8 @@ export default function Simulation() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
 
+  const model = new ModelGateway();
+
   // When team changes, clear the player selection too
   function handleBatTeamChange(teamId: TeamId) {
     setBatTeamId(teamId);
@@ -63,14 +66,6 @@ export default function Simulation() {
   const pitcherLabel = useMemo(() => {
     return pitcher ? `${pitcher.first_name} ${pitcher.last_name}` : "";
   }, [pitcher]);
-
-  function pretty(j: string): string {
-    try {
-      return JSON.stringify(JSON.parse(j), null, 2);
-    } catch {
-      return j;
-    }
-  }
 
   function buildPieData(probs: PitchProbMap): PieSlice[] {
     const positive = Object.entries(probs)
@@ -103,22 +98,20 @@ export default function Simulation() {
   function buildBody() {
     return {
       pitcher: String(pitcher?.id ?? ""),
+      pitcherFeatures: ["p_throws"],
       batter: String(batter?.id ?? ""),
-      state_features: {
-        inning_topbot: inningHalf === "top" ? "Top" : "Bottom",
-        count_state: `${balls}-${strikes}`,
-        prev_pitch_type: prevPitchType,
-        balls,
-        strikes,
-        outs_when_up: outs,
-        inning,
-        score_diff_bat: batScore - pitchScore,
-        on_1b: runnersOn.includes("1B") ? 1 : 0,
-        on_2b: runnersOn.includes("2B") ? 1 : 0,
-        on_3b: runnersOn.includes("3B") ? 1 : 0,
-      },
-      batter_features: ["stand"],
-      pitcher_features: ["p_throws"],
+      batterFeatures: ["stand"],
+      countState: `${balls}-${strikes}`,
+      previousPitchType: prevPitchType,
+      balls,
+      strikes,
+      outs,
+      inning,
+      inningTopBot: inningHalf === "top" ? "Top" : "Bottom",
+      scoreDifference: batScore - pitchScore,
+      on1b: runnersOn.includes("1B") ? 1 : 0,
+      on2b: runnersOn.includes("2B") ? 1 : 0,
+      on3b: runnersOn.includes("3B") ? 1 : 0,
     };
   }
 
@@ -158,33 +151,16 @@ export default function Simulation() {
     setPieData([]);
     setRespText("");
 
-    const body = buildBody();
-    console.log("Request body:", body);
-
     setLoading(true);
-    try {
-      const r = await fetch("/api/model/predict", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+    const response = await model.run(buildBody());
 
-      const text = await r.text();
-      if (!r.ok) {
-        setErr(pretty(text || `Request failed (${r.status})`));
-        return;
-      }
-
-      setRespText(pretty(text));
-      const payload = JSON.parse(text) as PredictResponse;
-      if (payload.pitch_one) {
-        setPieData(buildPieData(payload.pitch_one));
-      }
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e));
-    } finally {
-      setLoading(false);
+    if (response.success) {
+      const payload = response.payload!;
+      setPieData(buildPieData(payload.pitch_one));
     }
+
+    setRespText(response.text);
+    setLoading(false);
   }
 
   return (
