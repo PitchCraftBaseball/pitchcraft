@@ -57,11 +57,11 @@ export default function Simulation() {
   }
 
   const batterLabel = useMemo(() => {
-    return batter ? `${batter.first_name} ${batter.last_name}` : "";
+    return batter ? `${batter.use_first_name} ${batter.use_last_name}` : "";
   }, [batter]);
 
   const pitcherLabel = useMemo(() => {
-    return pitcher ? `${pitcher.first_name} ${pitcher.last_name}` : "";
+    return pitcher ? `${pitcher.use_first_name} ${pitcher.use_last_name}` : "";
   }, [pitcher]);
 
   function pretty(j: string): string {
