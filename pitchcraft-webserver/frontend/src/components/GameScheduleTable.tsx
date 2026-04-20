@@ -11,6 +11,7 @@ import PlayerComboBox from "../components/PlayerComboBox";
 import { Player } from "../types";
 import { TEAMS } from "../shared";
 import CloseIcon from "@mui/icons-material/Close";
+import Alert from '@mui/material/Alert';
 
 type ScheduleRow = {
   game_id: string;
@@ -46,7 +47,14 @@ export default function GameScheduleTable() {
   const [battingTeam, setBattingTeam] = useState(0);
   const [players, setPlayers] = useState<(Player | null)[]>(Array(10).fill(null));
   const [otherSidePlayers, setOtherSidePlayers] = useState<(Player | null)[]>(Array(10).fill(null));
-  const [preGameLoadingId, setPreGameLoadingId] = useState<string | null>(null);
+  const [preGameLoadingId, setPreGameLoadingId] = useState<string | null>(null); 
+  const [homeLineupDate, setHomeLineupDate] = useState<string | null>(null);
+  const [awayLineupDate, setAwayLineupDate] = useState<string | null>(null);
+  const [homeTeamId, setHomeTeamId] = useState<number | null>(null);
+  const [awayTeamId, setAwayTeamId] = useState<number | null>(null);
+  const [homeLineupEdited, setHomeLineupEdited] = useState(false);
+  const [awayLineupEdited, setAwayLineupEdited] = useState(false);
+
 
   const navigate = useNavigate();
 
@@ -54,6 +62,8 @@ export default function GameScheduleTable() {
     setPreGameLoadingId(row.game_id);
     setPitchingTeam(row.home_team_id);
     setBattingTeam(row.away_team_id);
+    setHomeTeamId(row.home_team_id);
+    setAwayTeamId(row.away_team_id);
 
     let data;
     try {
@@ -65,6 +75,9 @@ export default function GameScheduleTable() {
       }
 
       data = await response.json();
+
+      setHomeLineupDate(data.home.fromDate ? data.home.fromDate : null);
+      setAwayLineupDate(data.away.fromDate ? data.away.fromDate : null);
 
       const tempBatting = [
         data.home.pitcher,
@@ -88,11 +101,17 @@ export default function GameScheduleTable() {
     setPreGameLoadingId(null);
   }
 
-  const closeReportPopup = (event: object, reason: any) => {
+  const closeReportPopup = (_event: object, reason: any) => {
     if (reason != "backdropClick") {
       setPitchingTeam(0);
       setBattingTeam(0);
       setPlayers(Array(10).fill(null));
+      setHomeLineupDate(null);
+      setAwayLineupDate(null);
+      setHomeTeamId(null);
+      setAwayTeamId(null);
+      setHomeLineupEdited(false);
+      setAwayLineupEdited(false);
       setOpen(false);
     }
   }
@@ -101,6 +120,11 @@ export default function GameScheduleTable() {
     const temp = [...players];
     temp[index] = player;
     setPlayers(temp);
+    if (player?.team_id === homeTeamId) {
+      index === 0 ? setAwayLineupEdited(true) : setHomeLineupEdited(true);
+    } else if (player?.team_id === awayTeamId) {
+      index === 0 ? setHomeLineupEdited(true) : setAwayLineupEdited(true);
+    }
   }
 
   const fetchSchedule = async (date: Dayjs | null) => {
@@ -141,6 +165,7 @@ export default function GameScheduleTable() {
 
   const onClearClick = () => {
     setPlayers(Array(10).fill(null));
+    battingTeam === homeTeamId ? setHomeLineupEdited(true) : setAwayLineupEdited(true);
   }
 
   useEffect(() => {
@@ -204,6 +229,27 @@ export default function GameScheduleTable() {
           </IconButton>
           <Typography variant="h6" component="h2">Pitching: {getTeam(pitchingTeam)?.name ?? "Unknown Team"}</Typography>
           <Typography variant="h6" component="h2">Batting: {getTeam(battingTeam)?.name ?? "Unknown Team"}</Typography>
+            {!homeLineupEdited && battingTeam === homeTeamId && homeLineupDate && (
+              <Alert severity="info" sx={{ mb: 1 }}>
+                {getTeam(battingTeam)?.name ?? "Home"} batting lineup autofilled from game on {dayjs(homeLineupDate).format("YYYY-MM-DD")}.
+              </Alert>
+            )}
+
+            {!awayLineupEdited && battingTeam === awayTeamId && awayLineupDate && (
+              <Alert severity="info" sx={{ mb: 1 }}>
+                {getTeam(battingTeam)?.name ?? "Away"} batting lineup autofilled from game on {dayjs(awayLineupDate).format("YYYY-MM-DD")}.
+              </Alert>
+            )}
+            
+            {(
+              (!homeLineupEdited && battingTeam === homeTeamId && !homeLineupDate) ||
+              (!awayLineupEdited && battingTeam === awayTeamId && !awayLineupDate)
+            ) && (
+              <Alert severity="success" sx={{ mb: 1 }}>
+                This lineup is the official posted lineup for this game.
+              </Alert>
+            )}
+
           <Box display="flex" justifyContent="space-between">
             <Button 
               variant="contained" 

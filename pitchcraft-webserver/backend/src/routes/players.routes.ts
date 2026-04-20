@@ -6,6 +6,11 @@ const MLB_STATS_API_URL = "https://statsapi.mlb.com/api/v1.1";
 
 const playersRouter = express.Router();
 
+type FallbackResponse = {
+  batterIds: number[],
+  date: Date | null,
+}
+
 async function getPlayers(req: Request, res: Response, batters: boolean) {
   const teamId = Number(req.query.teamId);
 
@@ -41,7 +46,7 @@ playersRouter.get("/", async (_req, res) => {
   }
 });
 
-async function getFallbackLineup(teamId: number, oppPitchHand: 'R' | 'L' | 'S' | undefined): Promise<number[]> {
+async function getFallbackLineup(teamId: number, oppPitchHand: 'R' | 'L' | 'S' | undefined): Promise<FallbackResponse> {
   try {
     const endDate = new Date();
     const startDate = new Date(endDate);
@@ -70,7 +75,10 @@ async function getFallbackLineup(teamId: number, oppPitchHand: 'R' | 'L' | 'S' |
 
       if (!gameRes.ok) {
         console.error(`MLB Stats API error: ${gameRes.status} ${gameRes.statusText}`);
-        return [];
+        return {
+            batterIds: [],
+            date: null
+          }
       }
 
       const gameData = await gameRes.json();
@@ -82,7 +90,10 @@ async function getFallbackLineup(teamId: number, oppPitchHand: 'R' | 'L' | 'S' |
         // take most recent game if no projected opposing pitcher or if switch pitcher
         const batterIds = gameData?.liveData?.boxscore?.teams?.[teamSide]?.battingOrder;
         if (batterIds && batterIds.length > 0) {
-          return batterIds;
+          return {
+            batterIds,
+            date: game.game_datetime
+          }
         }
       } else {
         const oppPitcherHand = gameData?.gameData?.probablePitchers?.[isHome ? 'away' : 'home']?.pitchHand?.code;
@@ -94,7 +105,10 @@ async function getFallbackLineup(teamId: number, oppPitchHand: 'R' | 'L' | 'S' |
         const batterIds = gameData?.liveData?.boxscore?.teams?.[teamSide]?.battingOrder;
 
         if (batterIds && batterIds.length > 0) {
-          return batterIds;
+          return {
+            batterIds,
+            date: game.game_datetime
+          };
         }
       }
     }
@@ -104,18 +118,35 @@ async function getFallbackLineup(teamId: number, oppPitchHand: 'R' | 'L' | 'S' |
     const fallbackGameRes = await fetch(`${MLB_STATS_API_URL}/game/${fallbackGame.game_id}/feed/live`);
     if (!fallbackGameRes.ok) {
       console.error(`MLB Stats API error: ${fallbackGameRes.status} ${fallbackGameRes.statusText}`);
-      return [];
+      return {
+        batterIds: [],
+        date: null
+      }
     }
 
     const fallbackGameData = await fallbackGameRes.json();
     const isHome = fallbackGameData.gameData.teams.home.id === teamId;
     const teamSide = isHome ? 'home' : 'away';
     const fallbackBatterIds = fallbackGameData?.liveData?.boxscore?.teams?.[teamSide]?.battingOrder;
-    return fallbackBatterIds ?? [];
+    
+    if (fallbackBatterIds && fallbackBatterIds.length > 0) {
+      return {
+        batterIds: fallbackBatterIds,
+        date: fallbackGame.game_datetime
+      }
+    } else {
+      return {
+        batterIds: [],
+        date: null
+      }
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error(`Error fetching recent game for team ${teamId}: ${message}`);
-    return [];
+    return {
+      batterIds: [],
+      date: null
+    }
   }
 }
 
@@ -146,21 +177,21 @@ async function getProjectedLineup(req: Request, res: Response) {
     let homeBatterIds = boxScore?.home?.battingOrder ?? [];
     let awayBatterIds = boxScore?.away?.battingOrder ?? [];
 
-    if (homeBatterIds.length != 0 && awayBatterIds.length != 0) {
-      console.log("FROM STATS API", {
-        homeBatterIds,
-        awayBatterIds
-      })
-    }
+    let homePreviousDate: Date | null = null;
+    let awayPreviousDate: Date | null = null;
     
     // lineups are only posted after manager has submitted (usually around 2 hours before gametime) 
     // if not available, fallback to recent games, prioritizing a game with a pitcher that matches the projected opposing pitcher's throwing hand
     if (homeBatterIds.length === 0) {
-      homeBatterIds = await getFallbackLineup(data.gameData.teams.home.id, awayPitcherHand);
+      const { batterIds, date } = await getFallbackLineup(data.gameData.teams.home.id, awayPitcherHand);
+      homeBatterIds = batterIds;
+      homePreviousDate = date;
     }
 
     if (awayBatterIds.length === 0) {
-      awayBatterIds = await getFallbackLineup(data.gameData.teams.away.id, homePitcherHand);
+      const { batterIds, date } = await getFallbackLineup(data.gameData.teams.away.id, homePitcherHand);
+      awayBatterIds = batterIds;
+      awayPreviousDate = date;
     }
 
     const combinedIds = [...new Set([...homeBatterIds, ...awayBatterIds, homePitcherId, awayPitcherId])];
@@ -176,11 +207,13 @@ async function getProjectedLineup(req: Request, res: Response) {
     return res.json({
       home: {
         pitcher: dbPlayers.find(player => player.id === homePitcherId),
-        batters: homeBatterIds.map((id: Number) => dbPlayers.find(player => player.id === id))
+        batters: homeBatterIds.map((id: Number) => dbPlayers.find(player => player.id === id)),
+        fromDate: homePreviousDate
       },
       away: {
         pitcher: dbPlayers.find(player => player.id === awayPitcherId),
-        batters: awayBatterIds.map((id: Number) => dbPlayers.find(player => player.id === id))
+        batters: awayBatterIds.map((id: Number) => dbPlayers.find(player => player.id === id)),
+        fromDate: awayPreviousDate
       }
     });
   } catch (err) {
