@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { Player, PitchProbMap, PieSlice } from "../types";
+import { type Player, type PitchProbMap, type PieSlice, PredictResponse } from "../types";
 import { TEAMS, PITCH_TYPES, INNING_OPTIONS, formatPitchType } from "../shared";
 import {
   Button,
@@ -14,9 +14,9 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from "@mui/material";
-import { PieChart } from "@mui/x-charts/PieChart";
 import PlayerComboBox from "../components/PlayerComboBox";
 import ModelGateway from "../modelGateway";
+import ProbabilityPieChart from "../components/ProbabilityPieChart";
 
 type TeamId = number | "";
 
@@ -43,6 +43,7 @@ export default function Simulation() {
   // Output
   const [pieData, setPieData] = useState<PieSlice[]>([]);
   const [respText, setRespText] = useState("");
+  const [modelOutput, setModelOutput] = useState<PredictResponse | undefined>();
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
 
@@ -148,6 +149,7 @@ export default function Simulation() {
 
   async function run(): Promise<void> {
     setErr("");
+    setModelOutput(undefined);
     setPieData([]);
     setRespText("");
 
@@ -157,6 +159,7 @@ export default function Simulation() {
     if (response.success) {
       const payload = response.payload!;
       setPieData(buildPieData(payload.pitch_one));
+      setModelOutput(payload);
     }
 
     setRespText(response.text);
@@ -318,15 +321,7 @@ export default function Simulation() {
             <Typography variant="subtitle1" sx={{ mb: 1 }}>
               Top pitch probabilities
             </Typography>
-            <PieChart
-              height={260}
-              series={[
-                {
-                  data: pieData,
-                  valueFormatter: (item) => `${(item.value * 100).toFixed(1)}%`,
-                },
-              ]}
-            />
+            <ProbabilityPieChart size={260} data={modelOutput?.pitch_one} />
           </Paper>
         )}
 
