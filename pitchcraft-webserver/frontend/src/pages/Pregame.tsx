@@ -8,6 +8,7 @@ import {
 } from "@mui/material";
 import PlayerComboBox from "../components/PlayerComboBox";
 import { Player } from "../types";
+import PreGameBatter from "../components/PreGameBatter";
 
 function updateRoster(playerIndex: number, player: Player) {
   console.log(player);
@@ -31,18 +32,9 @@ export default function Pregame() {
   let pitchingTeam = players[0].team_id;
   let battingTeam = players[1].team_id;
 
-  console.log(pitchingTeam, battingTeam);
-
   const reports = [];
   for (let i = 1; i < players.length; i++) {
-    reports.push(<div key={"report" + i}>
-                  <Typography variant="h5">
-                    {players[i].use_first_name} {players[i].use_last_name}
-                  </Typography>
-                  <Typography>
-                    report
-                  </Typography>
-                 </div>);
+    reports.push(<PreGameBatter pitcher={players[0]} batter={players[i]} key={"report" + i} />);
   }
 
   return <Paper sx={{ p: 2 }}>

@@ -41,7 +41,6 @@ export default function Simulation() {
   const [prevPitchType, setPrevPitchType] = useState("FF");
 
   // Output
-  const [pieData, setPieData] = useState<PieSlice[]>([]);
   const [respText, setRespText] = useState("");
   const [modelOutput, setModelOutput] = useState<PredictResponse | undefined>();
   const [loading, setLoading] = useState(false);
@@ -150,7 +149,6 @@ export default function Simulation() {
   async function run(): Promise<void> {
     setErr("");
     setModelOutput(undefined);
-    setPieData([]);
     setRespText("");
 
     setLoading(true);
@@ -158,7 +156,6 @@ export default function Simulation() {
 
     if (response.success) {
       const payload = response.payload!;
-      setPieData(buildPieData(payload.pitch_one));
       setModelOutput(payload);
     }
 
@@ -316,12 +313,12 @@ export default function Simulation() {
 
         {err && <pre className="pre pre-error">{err}</pre>}
 
-        {pieData.length > 0 && (
+        {modelOutput?.pitch_one && (
           <Paper variant="outlined" sx={{ p: 2 }}>
             <Typography variant="subtitle1" sx={{ mb: 1 }}>
               Top pitch probabilities
             </Typography>
-            <ProbabilityPieChart size={260} data={modelOutput?.pitch_one} />
+            <ProbabilityPieChart size={260} data={modelOutput.pitch_one} />
           </Paper>
         )}
 
