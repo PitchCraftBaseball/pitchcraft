@@ -23,6 +23,10 @@ export default function Pregame() {
     }
   });
 
+    if (!state || !("players" in state)) {
+      return;
+    }
+
   let players: Player[] = state?.players;
   let pitchingTeam = players[0].team_id;
   let battingTeam = players[1].team_id;
