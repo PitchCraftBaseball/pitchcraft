@@ -37,6 +37,11 @@ export default function PreGameBatter({ pitcher, batter }: PreGameBatterProps) {
   
   async function run() {
     setLoading(true);
+    if (!pitcher || !batter) {
+      setError("Invalid pitcher/batter");
+      return;
+    }
+
     const response = await model.run(buildBody());
     if (response.success) {
       const payload = response.payload!;

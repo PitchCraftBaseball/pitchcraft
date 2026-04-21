@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router";
 import {
     Divider,
@@ -10,25 +10,30 @@ import PlayerComboBox from "../components/PlayerComboBox";
 import { Player } from "../types";
 import PreGameBatter from "../components/PreGameBatter";
 
-function updateRoster(playerIndex: number, player: Player) {
-  console.log(player);
-}
-
 export default function Pregame() {
   const navigate = useNavigate();
   const state = useLocation().state;
+  const [players, setPlayers] = useState<Player[]>([]);
+
+  function updateRoster(playerIndex: number, player: Player) {
+    state.players[playerIndex] = player;
+    const temp = [...players];
+    temp[playerIndex] = player;
+    setPlayers(temp);
+  }
 
   useEffect(() => {
     if (!state || !("players" in state)) {
       navigate("/");
+    } else {
+      setPlayers(state.players);
     }
   });
 
-    if (!state || !("players" in state)) {
-      return;
-    }
+  if (players.length == 0) {
+    return;
+  }
 
-  let players: Player[] = state?.players;
   let pitchingTeam = players[0].team_id;
   let battingTeam = players[1].team_id;
 
