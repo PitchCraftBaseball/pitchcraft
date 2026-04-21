@@ -13,6 +13,7 @@ export default function PreGameBatter({ pitcher, batter }: PreGameBatterProps) {
   const model = new ModelGateway();
   const [loading, setLoading] = useState(true);
   const [modelOutput, setModelOutput] = useState<PredictResponse | undefined>();
+  const [error, setError] = useState("");
 
   function buildBody() {
     return {
@@ -40,6 +41,9 @@ export default function PreGameBatter({ pitcher, batter }: PreGameBatterProps) {
     if (response.success) {
       const payload = response.payload!;
       setModelOutput(payload);
+    } else {
+      setError(response.text);
+      console.log(response.text);
     }
     setLoading(false);
   }
@@ -60,5 +64,6 @@ export default function PreGameBatter({ pitcher, batter }: PreGameBatterProps) {
       {batter.first_name} {batter.last_name}
     </Typography>
     {output}
+    {error && <Typography>error</Typography>}
   </div>
 }
