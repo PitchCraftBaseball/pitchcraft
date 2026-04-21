@@ -14,19 +14,28 @@ export default function Pregame() {
   const navigate = useNavigate();
   const state = useLocation().state;
   const [players, setPlayers] = useState<Player[]>([]);
+  const [selectedPlayers, setSelectedPlayers] = useState<Set<number>>(new Set());
 
-  function updateRoster(playerIndex: number, player: Player) {
-    state.players[playerIndex] = player;
+  function updatePlayer(index: number, player: Player) {
+    const oldPlayer = players[index];
+    state.players[index] = player;
+
     const temp = [...players];
-    temp[playerIndex] = player;
+    temp[index] = player;
     setPlayers(temp);
+
+    const tempSelected = selectedPlayers;
+    tempSelected.delete(oldPlayer.id);
+    tempSelected.add(player.id);
+    setSelectedPlayers(tempSelected);
   }
 
   useEffect(() => {
     if (!state || !("players" in state)) {
       navigate("/");
-    } else {
+    } else if (players.length == 0) {
       setPlayers(state.players);
+      setSelectedPlayers(new Set(state.players.map((player: Player) => player.id)));
     }
   });
 
@@ -38,9 +47,19 @@ export default function Pregame() {
   let battingTeam = players[1].team_id;
 
   const reports = [];
+  const batters = [];
   for (let i = 1; i < players.length; i++) {
     reports.push(<PreGameBatter pitcher={players[0]} batter={players[i]} key={"report" + i} />);
+    batters.push(<PlayerComboBox
+                   value={players[i]}
+                   teamId={battingTeam}
+                   batters={true}
+                   alreadySelected={selectedPlayers}
+                   onChange={(newValue) => { updatePlayer(i, newValue!) }}
+                   key={"batter" + i}
+                 />);
   }
+
 
   return <Paper sx={{ p: 2 }}>
     <Grid container spacing={2}>
@@ -52,20 +71,18 @@ export default function Pregame() {
         <Typography>
           Pitcher
         </Typography>
-        <PlayerComboBox value={players[0]} teamId={pitchingTeam} batters={false} onChange={(newValue) => { updateRoster(0, newValue!) }}/>
+        <PlayerComboBox
+          value={players[0]}
+          teamId={pitchingTeam}
+          batters={false}
+          alreadySelected={selectedPlayers}
+          onChange={(newValue) => { updatePlayer(0, newValue!) }}
+        />
         <Divider />
         <Typography>
           Batters
         </Typography>
-        <PlayerComboBox value={players[1]} teamId={battingTeam} batters={true} onChange={(newValue) => { updateRoster(1, newValue!) }}/>
-        <PlayerComboBox value={players[2]} teamId={battingTeam} batters={true} onChange={(newValue) => { updateRoster(2, newValue!) }}/>
-        <PlayerComboBox value={players[3]} teamId={battingTeam} batters={true} onChange={(newValue) => { updateRoster(3, newValue!) }}/>
-        <PlayerComboBox value={players[4]} teamId={battingTeam} batters={true} onChange={(newValue) => { updateRoster(4, newValue!) }}/>
-        <PlayerComboBox value={players[5]} teamId={battingTeam} batters={true} onChange={(newValue) => { updateRoster(5, newValue!) }}/>
-        <PlayerComboBox value={players[6]} teamId={battingTeam} batters={true} onChange={(newValue) => { updateRoster(6, newValue!) }}/>
-        <PlayerComboBox value={players[7]} teamId={battingTeam} batters={true} onChange={(newValue) => { updateRoster(7, newValue!) }}/>
-        <PlayerComboBox value={players[8]} teamId={battingTeam} batters={true} onChange={(newValue) => { updateRoster(8, newValue!) }}/>
-        <PlayerComboBox value={players[9]} teamId={battingTeam} batters={true} onChange={(newValue) => { updateRoster(9, newValue!) }}/>
+        {batters}
       </Grid>
       <Grid size="grow">
         <Paper sx={{ p: 2 }}>

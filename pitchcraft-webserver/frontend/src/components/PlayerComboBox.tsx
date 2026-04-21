@@ -22,9 +22,10 @@ interface PlayerComboBoxProps {
   batters: boolean;
   value: Player | null;
   onChange: (player: Player | null) => void;
+  alreadySelected: Set<number>;
 }
 
-export default function PlayerComboBox({ teamId, batters, value, onChange }: PlayerComboBoxProps) {
+export default function PlayerComboBox({ teamId, batters, value, onChange, alreadySelected }: PlayerComboBoxProps) {
   const [players, setPlayers] = useState<Player[]>([]);
 
   useEffect(() => {
@@ -52,6 +53,7 @@ export default function PlayerComboBox({ teamId, batters, value, onChange }: Pla
       options={players}
       getOptionLabel={(option) => `${option.first_name} ${option.last_name}`}
       getOptionKey={(option) => String(option.id)}
+      getOptionDisabled={(option) => alreadySelected.has(option.id)}
       isOptionEqualToValue={(option, value) => String(option.id) === String(value.id)}
       disabled={!teamId}
       disableClearable={true}
