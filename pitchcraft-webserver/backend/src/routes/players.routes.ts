@@ -15,7 +15,7 @@ async function getPlayers(req: Request, res: Response, batters: boolean) {
     const players = await prisma.player.findMany({
       where: {
         team_id: teamId,
-        position: batters ? { not: "P" } : "P",
+        position: batters ? { not: "P" } : { in: ["P", "TWP"] },
         active: { not: false },
       },
       orderBy: [{ last_name: "asc" }, { first_name: "asc" }],
