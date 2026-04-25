@@ -118,20 +118,16 @@ export default function Simulation() {
       pitcher: String(pitcher?.id ?? ""),
       batter: String(batter?.id ?? ""),
       state_features: {
-        inning_topbot: inningHalf === "top" ? "Top" : "Bottom",
-        count_state: `${balls}-${strikes}`,
-        prev_pitch_type: prevPitchType,
         balls,
         strikes,
         outs_when_up: outs,
         inning,
-        score_diff_bat: (parseInt(batScore) || 0) - (parseInt(pitchScore) || 0),
-        on_1b: runnersOn.includes("1B") ? 1 : 0,
-        on_2b: runnersOn.includes("2B") ? 1 : 0,
-        on_3b: runnersOn.includes("3B") ? 1 : 0,
+        inning_topbot: inningHalf === "top" ? "Top" : "Bottom",
+        bat_score_diff: (parseInt(batScore) || 0) - (parseInt(pitchScore) || 0),
+        on_1b: runnersOn.includes("1B"),
+        on_2b: runnersOn.includes("2B"),
+        on_3b: runnersOn.includes("3B"),
       },
-      batter_features: ["stand"],
-      pitcher_features: ["p_throws"],
     };
   }
 
