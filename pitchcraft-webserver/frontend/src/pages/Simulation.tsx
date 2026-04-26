@@ -117,6 +117,8 @@ export default function Simulation() {
     return {
       pitcher: String(pitcher?.id ?? ""),
       batter: String(batter?.id ?? ""),
+      year: "2025", 
+      strategy: "argmax",
       state_features: {
         balls,
         strikes,
