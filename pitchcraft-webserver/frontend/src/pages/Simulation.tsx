@@ -5,6 +5,7 @@ import {
   Button,
   FormControl,
   FormLabel,
+  Grid,
   MenuItem,
   Paper,
   Select,
@@ -15,9 +16,18 @@ import {
   ToggleButtonGroup,
 } from "@mui/material";
 import { PieChart } from "@mui/x-charts/PieChart";
+import Box from "@mui/material/Box";
 import PlayerComboBox from "../components/PlayerComboBox";
 
 type TeamId = number | "";
+
+type ChartEntry = {
+  pitchIndex: number;
+  pitchType: string;
+  ballsAfter: number;
+  strikesAfter: number;
+  data: PieSlice[];
+};
 
 export default function Simulation() {
   // Team selection
@@ -40,7 +50,7 @@ export default function Simulation() {
   const [prevPitchType, setPrevPitchType] = useState("FF");
 
   // Output
-  const [pieData, setPieData] = useState<PieSlice[]>([]);
+  const [charts, setCharts] = useState<ChartEntry[]>([]);
   const [respText, setRespText] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
@@ -125,6 +135,7 @@ export default function Simulation() {
         outs_when_up: outs,
         inning,
         inning_topbot: inningHalf === "top" ? "Top" : "Bottom",
+        prev_pitch_type: prevPitchType,
         bat_score_diff: (parseInt(batScore) || 0) - (parseInt(pitchScore) || 0),
         on_1b: runnersOn.includes("1B"),
         on_2b: runnersOn.includes("2B"),
@@ -166,7 +177,7 @@ export default function Simulation() {
 
   async function run(): Promise<void> {
     setErr("");
-    setPieData([]);
+    setCharts([]);
     setRespText("");
 
     const body = buildBody();
@@ -188,8 +199,17 @@ export default function Simulation() {
 
       setRespText(pretty(text));
       const payload = JSON.parse(text) as PredictResponse;
-      if (payload.pitch_one) {
-        setPieData(buildPieData(payload.pitch_one));
+      if (payload.sequence?.length) {
+        const top4 = payload.sequence.slice(0, 4);
+        setCharts(
+          top4.map((step) => ({
+            pitchIndex: step.pitch_index,
+            pitchType: step.pitch_type,
+            ballsAfter: step.balls_after,
+            strikesAfter: step.strikes_after,
+            data: buildPieData(step.rnn_pitch_probs),
+          })),
+        );
       }
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
@@ -358,30 +378,40 @@ export default function Simulation() {
 
         {err && <pre className="pre pre-error">{err}</pre>}
 
-        {pieData.length > 0 && (
-          <Paper variant="outlined" sx={{ p: 2 }}>
-            <Typography variant="subtitle1" sx={{ mb: 1 }}>
-              Top pitch probabilities
-            </Typography>
-            <PieChart
-              height={260}
-              series={[
-                {
-                  data: pieData,
-                  valueFormatter: (item) => `${(item.value * 100).toFixed(1)}%`,
-                },
-              ]}
-            />
-          </Paper>
+        {charts.length > 0 && (
+          <Box sx={{ my: 1 }}>
+            <Grid container columnSpacing={2} rowSpacing={2} alignItems="stretch">
+              {charts.map((c) => (
+                <Grid key={c.pitchIndex} size={{ xs: 12, sm: 6 }} sx={{ display: "flex" }}>
+                  <Paper variant="outlined" sx={{ p: 2, width: "100%" }}>
+                    <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                      Pitch {c.pitchIndex}: {formatPitchType(c.pitchType)} (Count: {c.ballsAfter}-{c.strikesAfter})
+                    </Typography>
+                    <PieChart
+                      height={260}
+                      series={[
+                        {
+                          data: c.data,
+                          valueFormatter: (item) => `${(item.value * 100).toFixed(1)}%`,
+                        },
+                      ]}
+                    />
+                  </Paper>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
         )}
 
-        <TextField
-          label="Response"
-          value={respText}
-          minRows={6}
-          fullWidth
-          multiline
-        />
+        <Box sx={{ mt: 1 }}>
+          <TextField
+            label="Response"
+            value={respText}
+            minRows={6}
+            fullWidth
+            multiline
+          />
+        </Box>
 
         <Typography variant="body2" color="text.secondary">
           <b>Selected:</b> batter={batterLabel} pitcher={pitcherLabel}

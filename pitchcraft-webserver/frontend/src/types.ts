@@ -17,4 +17,32 @@ export interface Player {
 export type TeamId = number | "";
 export type PitchProbMap = Record<string, number>;
 export type PieSlice = { id: string; value: number; label: string };
-export type PredictResponse = { pitch_one: PitchProbMap };
+
+export type OutTypeProbs = {
+  p_none: number;
+  p_so: number;
+  p_go: number;
+  p_fo: number;
+  p_hhfb: number;
+};
+
+export interface SequenceStep {
+  pitch_index: number;
+  pitch_type: string;
+  rnn_pitch_probs: PitchProbMap;
+  p_strike: number;
+  p_ball: number;
+  out_type_probs: OutTypeProbs;
+  transition_event: string;
+  out_type_event: string;
+  balls_after: number;
+  strikes_after: number;
+  terminal: boolean;
+  outcome: string | null;
+}
+
+export type PredictResponse = {
+  outcome: string;
+  pitch_count: number;
+  sequence: SequenceStep[];
+};
