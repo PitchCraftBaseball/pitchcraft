@@ -51,7 +51,7 @@ export default function PlayerComboBox({ teamId, batters, value, onChange, alrea
       value={value!}
       onChange={(_event, newValue) => onChange(newValue)}
       options={players}
-      getOptionLabel={(option) => `${option.first_name} ${option.last_name}`}
+      getOptionLabel={(option) => `${option.use_first_name} ${option.use_last_name}`}
       getOptionKey={(option) => String(option.id)}
       getOptionDisabled={(option) => alreadySelected.has(option.id)}
       isOptionEqualToValue={(option, value) => String(option.id) === String(value.id)}

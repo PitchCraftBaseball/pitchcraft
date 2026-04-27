@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { type Player, type PitchProbMap, type PieSlice, PredictResponse } from "../types";
-import { TEAMS, PITCH_TYPES, INNING_OPTIONS, formatPitchType } from "../shared";
+import { TEAMS, PITCH_TYPES, INNING_OPTIONS, formatPitchType, getPitcherArsenal } from "../shared";
 import {
   Button,
   FormControl,
@@ -36,8 +36,8 @@ export default function Simulation() {
   const [runnersOn, setRunnersOn] = useState<Array<"1B" | "2B" | "3B">>([]);
   const [inningHalf, setInningHalf] = useState<"top" | "bottom">("top");
   const [inning, setInning] = useState(1);
-  const [batScore, setBatScore] = useState(0);
-  const [pitchScore, setPitchScore] = useState(0);
+  const [batScore, setBatScore] = useState("0");
+  const [pitchScore, setPitchScore] = useState("0");
   const [prevPitchType, setPrevPitchType] = useState("FF");
 
   // Output
@@ -59,13 +59,34 @@ export default function Simulation() {
     setPitcher(null);
   }
 
+  const availablePitchTypes = useMemo(() => {
+    if (!pitcher) return PITCH_TYPES as unknown as string[];
+    const arsenal = getPitcherArsenal(pitcher.id);
+    return arsenal.length > 0 ? arsenal : PITCH_TYPES as unknown as string[];
+  }, [pitcher]);
+
   const batterLabel = useMemo(() => {
-    return batter ? `${batter.first_name} ${batter.last_name}` : "";
+    return batter ? `${batter.use_first_name} ${batter.use_last_name}` : "";
   }, [batter]);
 
   const pitcherLabel = useMemo(() => {
-    return pitcher ? `${pitcher.first_name} ${pitcher.last_name}` : "";
+    return pitcher ? `${pitcher.use_first_name} ${pitcher.use_last_name}` : "";
   }, [pitcher]);
+
+  // Reset prev pitch type if selected pitcher doesn't throw it
+  useEffect(() => {
+    if (!availablePitchTypes.includes(prevPitchType)) {
+      setPrevPitchType(availablePitchTypes[0]);
+    }
+  }, [availablePitchTypes]);
+
+  function pretty(j: string): string {
+    try {
+      return JSON.stringify(JSON.parse(j), null, 2);
+    } catch {
+      return j;
+    }
+  }
 
   function buildPieData(probs: PitchProbMap): PieSlice[] {
     const positive = Object.entries(probs)
@@ -108,7 +129,7 @@ export default function Simulation() {
       outs,
       inning,
       inningTopBot: inningHalf === "top" ? "Top" : "Bottom",
-      scoreDifference: batScore - pitchScore,
+      scoreDifference: (parseInt(batScore) || 0) - (parseInt(pitchScore) || 0),
       on1b: runnersOn.includes("1B") ? 1 : 0,
       on2b: runnersOn.includes("2B") ? 1 : 0,
       on3b: runnersOn.includes("3B") ? 1 : 0,
@@ -216,6 +237,7 @@ export default function Simulation() {
               teamId={batTeamId}
               batters={true}
               value={batter}
+              alreadySelected={new Set()}
               onChange={setBatter}
             />
           </FormControl>
@@ -226,6 +248,7 @@ export default function Simulation() {
               teamId={pitchTeamId}
               batters={false}
               value={pitcher}
+              alreadySelected={new Set()}
               onChange={setPitcher}
             />
           </FormControl>
@@ -261,7 +284,7 @@ export default function Simulation() {
             <FormLabel sx={{ mb: 0.5 }}>Inning</FormLabel>
             <Select value={inning} onChange={(e) => setInning(Number(e.target.value))}>
               {INNING_OPTIONS.map((n) => (
-                <MenuItem key={n} value={n}>{n}</MenuItem>
+                <MenuItem key={n} value={n}>{n === 10 ? "10+" : n}</MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -276,7 +299,12 @@ export default function Simulation() {
               size="small"
               type="number"
               value={batScore}
-              onChange={(e) => setBatScore(Number(e.target.value) || 0)}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "" || /^\d+$/.test(v)) setBatScore(v);
+              }}
+              onBlur={() => setBatScore(String(Math.max(0, parseInt(batScore) || 0)))}
+              inputProps={{ min: 0 }}
             />
           </FormControl>
 
@@ -287,14 +315,19 @@ export default function Simulation() {
               size="small"
               type="number"
               value={pitchScore}
-              onChange={(e) => setPitchScore(Number(e.target.value) || 0)}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "" || /^\d+$/.test(v)) setPitchScore(v);
+              }}
+              onBlur={() => setPitchScore(String(Math.max(0, parseInt(pitchScore) || 0)))}
+              inputProps={{ min: 0 }}
             />
           </FormControl>
 
           <FormControl fullWidth size="small">
             <FormLabel sx={{ mb: 0.5 }}>Previous pitch type</FormLabel>
             <Select value={prevPitchType} onChange={(e) => setPrevPitchType(String(e.target.value))}>
-              {PITCH_TYPES.map((pt) => (
+              {availablePitchTypes.map((pt) => (
                 <MenuItem key={pt} value={pt}>{formatPitchType(pt)}</MenuItem>
               ))}
             </Select>

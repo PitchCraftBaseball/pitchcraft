@@ -8,18 +8,20 @@ generator client {
 }
 
 model Player {
-  id            Int     @id
-  first_name    String
-  last_name     String
-  birthdate     DateTime?
-  team_id       Int?
-  position      String
-  batting_side  String
-  throwing_arm  String
-  height        Int?
-  weight        Int?
-  jersey_number Int?
-  active        Boolean?
+  id             Int     @id
+  first_name     String
+  last_name      String
+  birthdate      DateTime?
+  team_id        Int?
+  position       String
+  batting_side   String
+  throwing_arm   String
+  height         Int?
+  weight         Int?
+  jersey_number  Int?
+  active         Boolean?
+  use_first_name String
+  use_last_name  String
 
   @@map("players")
 }
