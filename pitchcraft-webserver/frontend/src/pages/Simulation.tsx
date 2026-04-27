@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { Player, PitchProbMap, PredictResponse, PieSlice } from "../types";
+import { type Player, type PitchProbMap, type PieSlice, PredictResponse } from "../types";
 import { TEAMS, PITCH_TYPES, INNING_OPTIONS, formatPitchType, getPitcherArsenal } from "../shared";
 import {
   Button,
@@ -14,10 +14,11 @@ import {
   Typography,
   ToggleButton,
   ToggleButtonGroup,
+  Box,
 } from "@mui/material";
-import { PieChart } from "@mui/x-charts/PieChart";
-import Box from "@mui/material/Box";
 import PlayerComboBox from "../components/PlayerComboBox";
+import ModelGateway from "../modelGateway";
+import ProbabilityPieChart from "../components/ProbabilityPieChart";
 
 type TeamId = number | "";
 
@@ -50,10 +51,12 @@ export default function Simulation() {
   const [prevPitchType, setPrevPitchType] = useState("FF");
 
   // Output
-  const [charts, setCharts] = useState<ChartEntry[]>([]);
   const [respText, setRespText] = useState("");
+  const [modelOutput, setModelOutput] = useState<PredictResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
+
+  const model = new ModelGateway();
 
   // When team changes, clear the player selection too
   function handleBatTeamChange(teamId: TeamId) {
@@ -87,60 +90,25 @@ export default function Simulation() {
     }
   }, [availablePitchTypes]);
 
-  function pretty(j: string): string {
-    try {
-      return JSON.stringify(JSON.parse(j), null, 2);
-    } catch {
-      return j;
-    }
-  }
-
-  function buildPieData(probs: PitchProbMap): PieSlice[] {
-    const positive = Object.entries(probs)
-      .filter(([, p]) => p > 0)
-      .sort((a, b) => b[1] - a[1]);
-
-    // 5 or fewer: show all
-    if (positive.length <= 5) {
-      return positive.map(([code, value]) => ({
-        id: code,
-        label: formatPitchType(code),
-        value,
-      }));
-    }
-
-    // More than 5: top 4 + other bucket
-    const top4 = positive.slice(0, 4);
-    const rest = positive.slice(4);
-    const otherValue = rest.reduce((sum, [, p]) => sum + p, 0);
-
-    const slices: PieSlice[] = top4.map(([code, value]) => ({
-      id: code,
-      label: formatPitchType(code),
-      value,
-    }));
-    slices.push({ id: "__other__", label: "Other", value: otherValue });
-    return slices;
-  }
-
   function buildBody() {
     return {
-      pitcher: String(pitcher?.id ?? ""),
-      batter: String(batter?.id ?? ""),
       year: "2025", 
       strategy: "argmax",
-      state_features: {
-        balls,
-        strikes,
-        outs_when_up: outs,
-        inning,
-        inning_topbot: inningHalf === "top" ? "Top" : "Bottom",
-        prev_pitch_type: prevPitchType,
-        bat_score_diff: (parseInt(batScore) || 0) - (parseInt(pitchScore) || 0),
-        on_1b: runnersOn.includes("1B"),
-        on_2b: runnersOn.includes("2B"),
-        on_3b: runnersOn.includes("3B"),
-      },
+      pitcher: String(pitcher?.id ?? ""),
+      pitcherFeatures: ["p_throws"],
+      batter: String(batter?.id ?? ""),
+      batterFeatures: ["stand"],
+      countState: `${balls}-${strikes}`,
+      previousPitchType: prevPitchType,
+      balls,
+      strikes,
+      outs,
+      inning,
+      inningTopBot: inningHalf === "top" ? "Top" : "Bottom",
+      scoreDifference: (parseInt(batScore) || 0) - (parseInt(pitchScore) || 0),
+      on1b: runnersOn.includes("1B") ? 1 : 0,
+      on2b: runnersOn.includes("2B") ? 1 : 0,
+      on3b: runnersOn.includes("3B") ? 1 : 0,
     };
   }
 
@@ -177,44 +145,32 @@ export default function Simulation() {
 
   async function run(): Promise<void> {
     setErr("");
-    setCharts([]);
+    setModelOutput(null);
     setRespText("");
 
-    const body = buildBody();
-    console.log("Request body:", body);
-
     setLoading(true);
-    try {
-      const r = await fetch("/api/model/predict", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+    const response = await model.run(buildBody());
 
-      const text = await r.text();
-      if (!r.ok) {
-        setErr(pretty(text || `Request failed (${r.status})`));
-        return;
-      }
+    if (response.success) {
+      const payload = response.payload!;
+      setModelOutput(payload);
+    }
 
-      setRespText(pretty(text));
-      const payload = JSON.parse(text) as PredictResponse;
-      if (payload.sequence?.length) {
-        const top4 = payload.sequence.slice(0, 4);
-        setCharts(
-          top4.map((step) => ({
-            pitchIndex: step.pitch_index,
-            pitchType: step.pitch_type,
-            ballsAfter: step.balls_after,
-            strikesAfter: step.strikes_after,
-            data: buildPieData(step.rnn_pitch_probs),
-          })),
-        );
-      }
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e));
-    } finally {
-      setLoading(false);
+    setRespText(response.text);
+    setLoading(false);
+  }
+
+  const charts = [];
+  if (modelOutput) {
+    for (let i = 0; i < Math.min(modelOutput.sequence.length, 4); i++) {
+      const step = modelOutput.sequence[i];
+      charts.push(<ProbabilityPieChart size={260} data={{
+        pitchIndex: step.pitch_index,
+        pitchType: step.pitch_type,
+        ballsAfter: step.balls_after,
+        strikesAfter: step.strikes_after,
+        data: step.rnn_pitch_probs
+      }} />);
     }
   }
 
@@ -271,6 +227,7 @@ export default function Simulation() {
               teamId={batTeamId}
               batters={true}
               value={batter}
+              alreadySelected={new Set()}
               onChange={setBatter}
             />
           </FormControl>
@@ -281,6 +238,7 @@ export default function Simulation() {
               teamId={pitchTeamId}
               batters={false}
               value={pitcher}
+              alreadySelected={new Set()}
               onChange={setPitcher}
             />
           </FormControl>
@@ -381,24 +339,7 @@ export default function Simulation() {
         {charts.length > 0 && (
           <Box sx={{ my: 1 }}>
             <Grid container columnSpacing={2} rowSpacing={2} alignItems="stretch">
-              {charts.map((c) => (
-                <Grid key={c.pitchIndex} size={{ xs: 12, sm: 6 }} sx={{ display: "flex" }}>
-                  <Paper variant="outlined" sx={{ p: 2, width: "100%" }}>
-                    <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                      Pitch {c.pitchIndex}: {formatPitchType(c.pitchType)} (Count: {c.ballsAfter}-{c.strikesAfter})
-                    </Typography>
-                    <PieChart
-                      height={260}
-                      series={[
-                        {
-                          data: c.data,
-                          valueFormatter: (item) => `${(item.value * 100).toFixed(1)}%`,
-                        },
-                      ]}
-                    />
-                  </Paper>
-                </Grid>
-              ))}
+              {charts}
             </Grid>
           </Box>
         )}

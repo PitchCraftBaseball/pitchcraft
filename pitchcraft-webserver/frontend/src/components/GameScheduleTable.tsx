@@ -45,6 +45,7 @@ export default function GameScheduleTable() {
   const [open, setOpen] = useState(false);
   const [pitchingTeam, setPitchingTeam] = useState(0);
   const [battingTeam, setBattingTeam] = useState(0);
+  const [selectedPlayers, setSelectedPlayers] = useState<Set<number>>(new Set());
   const [players, setPlayers] = useState<(Player | null)[]>(Array(10).fill(null));
   const [otherSidePlayers, setOtherSidePlayers] = useState<(Player | null)[]>(Array(10).fill(null));
   const [preGameLoadingId, setPreGameLoadingId] = useState<string | null>(null); 
@@ -54,7 +55,6 @@ export default function GameScheduleTable() {
   const [awayTeamId, setAwayTeamId] = useState<number | null>(null);
   const [homeLineupEdited, setHomeLineupEdited] = useState(false);
   const [awayLineupEdited, setAwayLineupEdited] = useState(false);
-
 
   const navigate = useNavigate();
 
@@ -84,6 +84,7 @@ export default function GameScheduleTable() {
         ...data.away.batters
       ];
       setPlayers(tempBatting);
+      setSelectedPlayers(new Set(tempBatting.filter((player) => player != null).map((player) => player.id)));
       
       const tempOther = [
         data.away.pitcher,
@@ -117,6 +118,7 @@ export default function GameScheduleTable() {
   }
 
   const updatePlayer = (index: number, player: Player | null) => {
+    const oldPlayer = players[index];
     const temp = [...players];
     temp[index] = player;
     setPlayers(temp);
@@ -125,6 +127,15 @@ export default function GameScheduleTable() {
     } else if (player?.team_id === awayTeamId) {
       index === 0 ? setHomeLineupEdited(true) : setAwayLineupEdited(true);
     }
+
+    const tempSelected = selectedPlayers;
+    if (oldPlayer) {
+      tempSelected.delete(oldPlayer?.id);
+    }
+    if (player) {
+      tempSelected.add(player?.id);
+    }
+    setSelectedPlayers(tempSelected);
   }
 
   const fetchSchedule = async (date: Dayjs | null) => {
@@ -150,6 +161,18 @@ export default function GameScheduleTable() {
     return TEAMS.find((x) => x.id == id);
   }
 
+  const batters = [];
+  for (let i = 1; i < players.length; i++) {
+    batters.push(<PlayerComboBox
+                   value={players[i]}
+                   teamId={battingTeam}
+                   batters={true}
+                   alreadySelected={selectedPlayers}
+                   onChange={(newValue) => { updatePlayer(i, newValue!) }}
+                   key={"batter" + i}
+                 />);
+  }
+
   const onSwapClick = () => {
     const temp = pitchingTeam;
     setPitchingTeam(battingTeam);
@@ -160,7 +183,7 @@ export default function GameScheduleTable() {
 
     setPlayers(newBatting);
     setOtherSidePlayers(newPitching);
-    setPlayers(newBatting);
+    setSelectedPlayers(new Set(newBatting.filter((player) => player != null).map((player) => player.id)));
   }
 
   const onClearClick = () => {
@@ -265,16 +288,13 @@ export default function GameScheduleTable() {
               Clear
             </Button>
           </Box>
-          <PlayerComboBox value={players[0]} teamId={pitchingTeam} batters={false} onChange={(newValue) => { updatePlayer(0, newValue) }}/>
-          <PlayerComboBox value={players[1]} teamId={battingTeam} batters={true} onChange={(newValue) => { updatePlayer(1, newValue) }}/>
-          <PlayerComboBox value={players[2]} teamId={battingTeam} batters={true} onChange={(newValue) => { updatePlayer(2, newValue) }}/>
-          <PlayerComboBox value={players[3]} teamId={battingTeam} batters={true} onChange={(newValue) => { updatePlayer(3, newValue) }}/>
-          <PlayerComboBox value={players[4]} teamId={battingTeam} batters={true} onChange={(newValue) => { updatePlayer(4, newValue) }}/>
-          <PlayerComboBox value={players[5]} teamId={battingTeam} batters={true} onChange={(newValue) => { updatePlayer(5, newValue) }}/>
-          <PlayerComboBox value={players[6]} teamId={battingTeam} batters={true} onChange={(newValue) => { updatePlayer(6, newValue) }}/>
-          <PlayerComboBox value={players[7]} teamId={battingTeam} batters={true} onChange={(newValue) => { updatePlayer(7, newValue) }}/>
-          <PlayerComboBox value={players[8]} teamId={battingTeam} batters={true} onChange={(newValue) => { updatePlayer(8, newValue) }}/>
-          <PlayerComboBox value={players[9]} teamId={battingTeam} batters={true} onChange={(newValue) => { updatePlayer(9, newValue) }}/>
+          <PlayerComboBox
+            value={players[0]}
+            teamId={pitchingTeam}
+            batters={false}
+            alreadySelected={selectedPlayers}
+            onChange={(newValue) => { updatePlayer(0, newValue) }}/>
+          {batters}
           <Button variant="contained" onClick={() => {
             navigate("/pregame", { state: { players: players } });
           }} disabled={players.filter(player => player != null).length != 10}>Continue</Button>
