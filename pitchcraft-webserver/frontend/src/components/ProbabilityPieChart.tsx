@@ -1,6 +1,8 @@
 import { PieChart } from "@mui/x-charts";
 import { PieSlice, PitchProbMap } from "../types";
 import { formatPitchType } from "../shared";
+import { Paper, Typography } from "@mui/material";
+
 
 function buildPieData(probabilities: PitchProbMap): PieSlice[] {
     const positive = Object.entries(probabilities)
@@ -30,9 +32,17 @@ function buildPieData(probabilities: PitchProbMap): PieSlice[] {
     return slices;
 }
 
+interface PieData {
+  pitchIndex: number,
+  pitchType: string,
+  ballsAfter: number,
+  strikesAfter: number,
+  data: PitchProbMap
+}
+
 interface ProbabilityPieChartProps {
   size: number,
-  data?: PitchProbMap
+  data?: PieData
 }
 
 export default function ProbabilityPieChart({ size, data }: ProbabilityPieChartProps) {
@@ -40,13 +50,18 @@ export default function ProbabilityPieChart({ size, data }: ProbabilityPieChartP
     return;
   }
 
-  return <PieChart
-    height={size}
-    series = {[
-      {
-        data: buildPieData(data),
-        valueFormatter: (item) => `${(item.value * 100).toFixed(1)}%`,
-      },
-    ]}
-  />
+  return <Paper variant="outlined" sx={{ p: 2, width: "100%" }}>
+    <Typography variant="subtitle1" sx={{ mb: 1 }}>
+      Pitch {data.pitchIndex}: {formatPitchType(data.pitchType)} (Count: {data.ballsAfter}-{data.strikesAfter})
+    </Typography>
+    <PieChart
+      height={size}
+      series = {[
+        {
+          data: buildPieData(data.data),
+          valueFormatter: (item) => `${(item.value * 100).toFixed(1)}%`,
+        },
+      ]}
+    />
+  </Paper>;
 }

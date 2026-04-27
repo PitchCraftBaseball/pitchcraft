@@ -5,6 +5,7 @@ import {
   Button,
   FormControl,
   FormLabel,
+  Grid,
   MenuItem,
   Paper,
   Select,
@@ -13,12 +14,21 @@ import {
   Typography,
   ToggleButton,
   ToggleButtonGroup,
+  Box,
 } from "@mui/material";
 import PlayerComboBox from "../components/PlayerComboBox";
 import ModelGateway from "../modelGateway";
 import ProbabilityPieChart from "../components/ProbabilityPieChart";
 
 type TeamId = number | "";
+
+type ChartEntry = {
+  pitchIndex: number;
+  pitchType: string;
+  ballsAfter: number;
+  strikesAfter: number;
+  data: PieSlice[];
+};
 
 export default function Simulation() {
   // Team selection
@@ -42,7 +52,7 @@ export default function Simulation() {
 
   // Output
   const [respText, setRespText] = useState("");
-  const [modelOutput, setModelOutput] = useState<PredictResponse | undefined>();
+  const [modelOutput, setModelOutput] = useState<PredictResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
 
@@ -80,44 +90,10 @@ export default function Simulation() {
     }
   }, [availablePitchTypes]);
 
-  function pretty(j: string): string {
-    try {
-      return JSON.stringify(JSON.parse(j), null, 2);
-    } catch {
-      return j;
-    }
-  }
-
-  function buildPieData(probs: PitchProbMap): PieSlice[] {
-    const positive = Object.entries(probs)
-      .filter(([, p]) => p > 0)
-      .sort((a, b) => b[1] - a[1]);
-
-    // 5 or fewer: show all
-    if (positive.length <= 5) {
-      return positive.map(([code, value]) => ({
-        id: code,
-        label: formatPitchType(code),
-        value,
-      }));
-    }
-
-    // More than 5: top 4 + other bucket
-    const top4 = positive.slice(0, 4);
-    const rest = positive.slice(4);
-    const otherValue = rest.reduce((sum, [, p]) => sum + p, 0);
-
-    const slices: PieSlice[] = top4.map(([code, value]) => ({
-      id: code,
-      label: formatPitchType(code),
-      value,
-    }));
-    slices.push({ id: "__other__", label: "Other", value: otherValue });
-    return slices;
-  }
-
   function buildBody() {
     return {
+      year: "2025", 
+      strategy: "argmax",
       pitcher: String(pitcher?.id ?? ""),
       pitcherFeatures: ["p_throws"],
       batter: String(batter?.id ?? ""),
@@ -169,7 +145,7 @@ export default function Simulation() {
 
   async function run(): Promise<void> {
     setErr("");
-    setModelOutput(undefined);
+    setModelOutput(null);
     setRespText("");
 
     setLoading(true);
@@ -182,6 +158,20 @@ export default function Simulation() {
 
     setRespText(response.text);
     setLoading(false);
+  }
+
+  const charts = [];
+  if (modelOutput) {
+    for (let i = 0; i < Math.min(modelOutput.sequence.length, 4); i++) {
+      const step = modelOutput.sequence[i];
+      charts.push(<ProbabilityPieChart size={260} data={{
+        pitchIndex: step.pitch_index,
+        pitchType: step.pitch_type,
+        ballsAfter: step.balls_after,
+        strikesAfter: step.strikes_after,
+        data: step.rnn_pitch_probs
+      }} />);
+    }
   }
 
   return (
@@ -346,22 +336,23 @@ export default function Simulation() {
 
         {err && <pre className="pre pre-error">{err}</pre>}
 
-        {modelOutput?.pitch_one && (
-          <Paper variant="outlined" sx={{ p: 2 }}>
-            <Typography variant="subtitle1" sx={{ mb: 1 }}>
-              Top pitch probabilities
-            </Typography>
-            <ProbabilityPieChart size={260} data={modelOutput.pitch_one} />
-          </Paper>
+        {charts.length > 0 && (
+          <Box sx={{ my: 1 }}>
+            <Grid container columnSpacing={2} rowSpacing={2} alignItems="stretch">
+              {charts}
+            </Grid>
+          </Box>
         )}
 
-        <TextField
-          label="Response"
-          value={respText}
-          minRows={6}
-          fullWidth
-          multiline
-        />
+        <Box sx={{ mt: 1 }}>
+          <TextField
+            label="Response"
+            value={respText}
+            minRows={6}
+            fullWidth
+            multiline
+          />
+        </Box>
 
         <Typography variant="body2" color="text.secondary">
           <b>Selected:</b> batter={batterLabel} pitcher={pitcherLabel}

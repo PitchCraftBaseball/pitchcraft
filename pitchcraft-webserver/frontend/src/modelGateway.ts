@@ -1,6 +1,8 @@
 import { PredictResponse } from "./types";
 
 interface ModelParameters {
+  year: string,
+  strategy: string,
   pitcher: string,
   pitcherFeatures: string[],
   batter: string,
@@ -21,6 +23,8 @@ interface ModelParameters {
 export default class ModelGateway {
   public async run(parameters: ModelParameters): Promise<{ success: boolean, text: string, payload?: PredictResponse }> {
     const body = {
+      year: parameters.year,
+      strategy: parameters.strategy,
       pitcher: parameters.pitcher,
       pitcher_features: parameters.pitcherFeatures,
       batter: parameters.batter,
@@ -33,7 +37,7 @@ export default class ModelGateway {
         balls: parameters.balls,
         strikes: parameters.strikes,
         outs_when_up: parameters.outs,
-        score_diff_bat: parameters.scoreDifference,
+        bat_score_diff: parameters.scoreDifference,
         on_1b: parameters.on1b,
         on_2b: parameters.on2b,
         on_3b: parameters.on3b,

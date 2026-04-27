@@ -1,4 +1,4 @@
-import { Typography } from "@mui/material";
+import { Stack, Typography } from "@mui/material";
 import { Player, PredictResponse } from "../types";
 import ModelGateway from "../modelGateway";
 import { useEffect, useState } from "react";
@@ -17,6 +17,8 @@ export default function PreGameBatter({ pitcher, batter }: PreGameBatterProps) {
 
   function buildBody() {
     return {
+      year: "2025",
+      strategy: "argmax",
       pitcher: String(pitcher?.id ?? ""),
       pitcherFeatures: ["p_throws"],
       batter: String(batter?.id ?? ""),
@@ -60,8 +62,21 @@ export default function PreGameBatter({ pitcher, batter }: PreGameBatterProps) {
   let output;
   if (loading) {
     output = <Typography>Loading...</Typography>;
-  } else {
-    output = <div><ProbabilityPieChart size={100} data={modelOutput!.pitch_one} /></div>;
+  } else if (modelOutput) {
+    const charts = [];
+    for (let i = 0; i < Math.min(modelOutput.sequence.length, 4); i++) {
+      const step = modelOutput.sequence[i];
+      charts.push(<ProbabilityPieChart key={"chart" + i} size={100} data={{
+        pitchIndex: step.pitch_index,
+        pitchType: step.pitch_type,
+        ballsAfter: step.balls_after,
+        strikesAfter: step.strikes_after,
+        data: step.rnn_pitch_probs
+      }} />);
+    }
+    output = <Stack direction={{ xs: "column", sm: "row" }} spacing = {1}>
+      {charts}
+    </Stack>
   }
 
   return <div>
