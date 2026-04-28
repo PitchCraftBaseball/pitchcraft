@@ -16,7 +16,7 @@ export interface Player {
 
 export type TeamId = number | "";
 export type PitchProbMap = Record<string, number>;
-export type PieSlice = { id: string; value: number; label: string };
+export type PieSlice = { id: string; value: number; label: string, color: string };
 
 export type OutTypeProbs = {
   p_none: number;
