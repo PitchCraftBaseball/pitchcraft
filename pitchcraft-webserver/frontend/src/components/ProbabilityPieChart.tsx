@@ -1,12 +1,9 @@
 import { PieChart } from "@mui/x-charts";
 import { PieSlice, PitchProbMap } from "../types";
-import { formatPitchType } from "../shared";
+import { Colors, formatPitchType } from "../shared";
 import { Paper, Typography } from "@mui/material";
-import PitchColors from "../data/pitch_colors.json";
+import pitchColors from "../data/pitch_colors.json";
 
-interface Colors {
-  [Key: string]: { color: string, name: string }
-}
 
 function buildPieData(probabilities: PitchProbMap): PieSlice[] {
     const positive = Object.entries(probabilities)
@@ -19,7 +16,7 @@ function buildPieData(probabilities: PitchProbMap): PieSlice[] {
         id: code,
         label: formatPitchType(code),
         value,
-        color: (PitchColors as Colors)[code].color
+        color: (pitchColors as Colors)[code].color
       }));
     }
 
@@ -33,7 +30,7 @@ function buildPieData(probabilities: PitchProbMap): PieSlice[] {
       id: code,
       label: formatPitchType(code),
       value,
-      color: (PitchColors as Colors)[code].color
+      color: (pitchColors as Colors)[code].color
     }));
     slices.push({ id: "__other__", label: "Other", value: otherValue, color: "gray" });
     return slices;
