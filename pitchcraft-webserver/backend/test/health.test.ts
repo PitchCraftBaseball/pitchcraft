@@ -1,16 +1,11 @@
-import axios, { AxiosError } from "axios";
-import { expect, test } from "vitest";
+import { describe, expect, it } from "vitest";
+import { api } from "./client.js";
 
-axios.defaults.baseURL = "http://127.0.0.1:8000";
+describe("BE_DB_HEALTH_OK", () => {
+  it("GET /api/health returns 200 with {ok: true, db: 'up'} when DB is reachable", async () => {
+    const res = await api.get("/api/health");
 
-test("GET /api/health returns {ok: true, db: 'up'}", async () => {
-  try {
-    const response = await axios.get("/api/health", { timeout: 5000 });
-    expect(response.status).toBe(200);
-    expect(response.data).toEqual({ ok: true, db: "up" });
-  } catch (err) {
-    const error = err as AxiosError;
-    if (!error.response) throw Error("Server never sent response (is it running?)");
-    throw err;
-  }
+    expect(res.status).toBe(200);
+    expect(res.data).toEqual({ ok: true, db: "up" });
+  });
 });
