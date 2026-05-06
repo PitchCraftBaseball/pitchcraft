@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router";
 import {
+    Chip,
     Divider,
   FormControl,
   FormLabel,
@@ -8,11 +9,15 @@ import {
   MenuItem,
   Paper,
   Select,
+  Stack,
   Typography,
 } from "@mui/material";
 import PlayerComboBox from "../components/PlayerComboBox";
 import { Player } from "../types";
 import PreGameBatter from "../components/PreGameBatter";
+import pitchArsenal from "../data/pitch_arsenal.json";
+import pitchColors from "../data/pitch_colors.json";
+import { ArsenalEntry, Colors, formatPitchType } from "../shared";
 
 type OutType = "default" | "ground" | "fly" | "strike";
 
@@ -85,6 +90,26 @@ export default function Pregame() {
     );
   }
 
+  let arsenal = [];
+  let pitcherProfileError;
+  const entry = (pitchArsenal as Record<string, ArsenalEntry>)[players[0].id];
+  const year = entry["2025"] ?? entry["2024"];
+  if (year) {
+    const keys = Object.keys(year.pitch_type_percentage);
+    for (let i = 0; i < keys.length; i++) {
+      const color = (pitchColors as Colors)[keys[i]].color;
+      arsenal.push(
+        <Stack direction="column" spacing={1} key={"pitcherArsenalStack" + i}>
+          <Chip size="small" sx={{ bgcolor: color, color: color, userSelect: "none" }} />
+          <Typography align="center">
+            {formatPitchType(keys[i]) + ": " + (year.pitch_type_percentage[keys[i]] * 100).toFixed(2) + "%"}
+          </Typography>
+        </Stack>);
+    }
+  } else {
+    pitcherProfileError = <Typography>Could not load pitcher profile.</Typography>;
+  }
+
   return <Paper sx={{ p: 2 }}>
     <Grid container spacing={2}>
       <Grid size={3}>
@@ -111,11 +136,12 @@ export default function Pregame() {
       <Grid size="grow">
         <Paper sx={{ p: 2 }}>
           <Typography variant="h5">
-            Pitcher Profile
+            {players[0].use_first_name} {players[0].use_last_name} Profile
           </Typography>
-          <Typography>
-            TODO
-          </Typography>
+          {pitcherProfileError}
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            {arsenal}
+          </Stack>
         </Paper>
         {reports}
       </Grid>

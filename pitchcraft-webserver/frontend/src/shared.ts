@@ -77,7 +77,11 @@ export function formatPitchType(code: string): string {
 export const INNING_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 import pitchArsenal from "./data/pitch_arsenal.json";
 
-type ArsenalEntry = { "2024"?: { pitch_type: Record<string, number> }; "2025"?: { pitch_type: Record<string, number> } };
+export type ArsenalEntry = { "2024"?: { pitch_type: Record<string, number>, pitch_type_percentage: Record<string, number> }; "2025"?: { pitch_type: Record<string, number>, pitch_type_percentage: Record<string, number> } };
+
+export type Colors = {
+  [Key: string]: { color: string, name: string }
+}
 
 export function getPitcherArsenal(playerId: string | number): string[] {
   const entry = (pitchArsenal as Record<string, ArsenalEntry>)[String(playerId)];
