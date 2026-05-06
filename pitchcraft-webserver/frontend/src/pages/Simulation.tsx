@@ -15,6 +15,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Box,
+  Container,
 } from "@mui/material";
 import PlayerComboBox from "../components/PlayerComboBox";
 import ModelGateway from "../modelGateway";
@@ -175,8 +176,8 @@ export default function Simulation() {
   }
 
   return (
-    <Paper sx={{ p: 2 }}>
-      <Typography variant="h5" sx={{ mb: 2 }}>
+    <Container sx={{ mt: 2 }}>
+      <Typography variant="h4" sx={{ mb: 2 }} align="center">
         Model Simulation
       </Typography>
 
@@ -359,6 +360,6 @@ export default function Simulation() {
         </Typography>
 
       </Stack>
-    </Paper>
+    </Container>
   );
 }

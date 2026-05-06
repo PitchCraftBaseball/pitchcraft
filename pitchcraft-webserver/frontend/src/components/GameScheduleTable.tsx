@@ -5,13 +5,15 @@ import utc from "dayjs/plugin/utc";
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+import { Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import { Box, Button, IconButton, Modal, Paper, Typography, CircularProgress } from "@mui/material";
 import PlayerComboBox from "../components/PlayerComboBox";
 import { Player } from "../types";
 import { TEAMS } from "../shared";
 import CloseIcon from "@mui/icons-material/Close";
 import Alert from '@mui/material/Alert';
+import ChevronLeft from "@mui/icons-material/ChevronLeft";
+import ChevronRight from "@mui/icons-material/ChevronRight";
 
 type ScheduleRow = {
   game_id: string;
@@ -22,7 +24,6 @@ type ScheduleRow = {
   home_team_id: number;
   venue_id: number;
   venue_name: string;
-  summary: string;
 };
 
 dayjs.extend(utc);
@@ -196,41 +197,61 @@ export default function GameScheduleTable() {
   }, []);
 
   return (
-    <div className="schedule">
-      <h2>Schedule</h2>
+    <Box sx={{ mt: 2 }}>
+      <Typography align="center" variant="h4">Schedule</Typography>
 
-      <LocalizationProvider dateAdapter={AdapterDayjs}>
-        <DatePicker 
-          label="datepicker" 
-          value={gameDate} 
-          onChange={e => fetchSchedule(e)} 
-        />
-      </LocalizationProvider>
+      <Stack direction="row" sx={{ mt: 2, alignItems: "center", justifyContent: "center" }}>
+        <IconButton onClick={() => {
+          const dayBefore = gameDate!.subtract(1, "day")
+          setGameDate(dayBefore);
+          fetchSchedule(dayBefore);
+        } }>
+          <ChevronLeft />
+        </IconButton>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <DatePicker
+            sx={{ width: "30%" }}
+            value={gameDate}
+            onChange={e => fetchSchedule(e)}
+          />
+        </LocalizationProvider>
+        <IconButton onClick={() => {
+          const dayAfter = gameDate!.add(1, "day")
+          setGameDate(dayAfter);
+          fetchSchedule(dayAfter);
+        } }>
+          <ChevronRight />
+        </IconButton>
+      </Stack>
 
-      <TableContainer component={Paper} sx={{ marginTop: 2 }}>
+      <TableContainer component={Paper} sx={{ mt: 2 }}>
         <Table size="small" aria-label="schedule table">
           <TableHead>
             <TableRow>
-              <TableCell>Date/Time</TableCell>
+              <TableCell>Time</TableCell>
               <TableCell>Away</TableCell>
               <TableCell>Home</TableCell>
               <TableCell>Venue</TableCell>
-              <TableCell>Summary</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {scheduleRows.map(row => (
               <TableRow key={row.game_id}>
                 <TableCell>
-                  {dayjs.utc(row.game_datetime).local().format("YYYY-MM-DD h:mm A")}
+                  {dayjs.utc(row.game_datetime).local().format("h:mm A")}
                 </TableCell>
-                <TableCell>{row.away_team}</TableCell>
-                <TableCell>{row.home_team}</TableCell>
+                <TableCell>
+                  <img src="../assets/react.svg" />
+                  {row.away_team}
+                </TableCell>
+                <TableCell>
+                  <img src="../assets/react.svg" />
+                  {row.home_team}
+                </TableCell>
                 <TableCell>{row.venue_name}</TableCell>
-                <TableCell>{row.summary}</TableCell>
-                <TableCell sx={{ textAlign: "center" }}>
+                <TableCell sx={{ textAlign: "right" }}>
                   {preGameLoadingId === row.game_id ? (
-                    <CircularProgress size={24} />
+                    <CircularProgress size={31} />
                   ) : (
                     <Button variant="contained" onClick={() => openReportPopup(row)}>Open Pre-Game Report</Button>
                   )}
@@ -300,6 +321,6 @@ export default function GameScheduleTable() {
           }} disabled={players.filter(player => player != null).length != 10}>Continue</Button>
         </Box>
       </Modal>
-    </div>
+    </Box>
   );
 }

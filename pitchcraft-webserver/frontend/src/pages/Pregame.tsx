@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router";
 import {
     Chip,
+    Container,
     Divider,
   FormControl,
   FormLabel,
@@ -89,6 +90,7 @@ export default function Pregame() {
         </div>
     );
   }
+  console.log(players);
 
   let arsenal = [];
   let pitcherProfileError;
@@ -110,7 +112,7 @@ export default function Pregame() {
     pitcherProfileError = <Typography>Could not load pitcher profile.</Typography>;
   }
 
-  return <Paper sx={{ p: 2 }}>
+  return <Container>
     <Grid container spacing={2}>
       <Grid size={3}>
         <Typography variant="h5">
@@ -146,5 +148,5 @@ export default function Pregame() {
         {reports}
       </Grid>
     </Grid>
-  </Paper>
+  </Container>
 }
