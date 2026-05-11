@@ -1,7 +1,7 @@
 import { PieChart } from "@mui/x-charts";
 import { PieSlice, PitchProbMap } from "../types";
 import { Colors, formatPitchType } from "../shared";
-import { Paper, Typography } from "@mui/material";
+import { Paper, styled, Typography } from "@mui/material";
 import pitchColors from "../data/pitch_colors.json";
 
 
@@ -28,7 +28,7 @@ function buildPieData(probabilities: PitchProbMap): PieSlice[] {
 
     const slices: PieSlice[] = top4.map(([code, value]) => ({
       id: code,
-      label: formatPitchType(code),
+      label: (location) => location === "legend" ? code : formatPitchType(code),
       value,
       color: (pitchColors as Colors)[code].color
     }));
@@ -49,23 +49,32 @@ interface ProbabilityPieChartProps {
   data?: PieData
 }
 
-export default function ProbabilityPieChart({ size, data }: ProbabilityPieChartProps) {
+function ProbabilityPieChartLogic({ size, data, ...props }: ProbabilityPieChartProps) {
   if (!data) {
     return;
   }
 
-  return <Paper variant="outlined" sx={{ p: 2, width: "100%" }}>
+  return <Paper sx={{ p: 2, width: "100%" }} {...props}>
     <Typography variant="subtitle1" sx={{ mb: 1 }}>
       Pitch {data.pitchIndex}: {formatPitchType(data.pitchType)} (Count: {data.ballsAfter}-{data.strikesAfter})
     </Typography>
     <PieChart
       height={size}
-      series = {[
+      series={[
         {
           data: buildPieData(data.data),
           valueFormatter: (item) => `${(item.value * 100).toFixed(1)}%`,
         },
       ]}
+      slotProps={{
+        legend: {
+          direction: "horizontal",
+          position: { vertical: "bottom", horizontal: "center" }
+        }
+      }}
     />
   </Paper>;
 }
+
+const ProbabilityPieChart = styled(ProbabilityPieChartLogic)``;
+export default ProbabilityPieChart;

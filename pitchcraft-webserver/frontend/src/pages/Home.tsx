@@ -1,12 +1,14 @@
 import { useNavigate } from "react-router";
-import { Button, Container } from "@mui/material";
+import { Box, Button, Container } from "@mui/material";
 import GameScheduleTable from "../components/GameScheduleTable";
 
 export default function Home() {
   const navigate = useNavigate();
 
   return <Container>
-    <Button variant="contained" fullWidth sx={{ mt: 2 }} onClick={() => navigate("/simulation")}>Simulation</Button>
+    <Box display="flex" justifyContent="center" alignItems="center">
+    <Button variant="contained" sx={{ p: 2, width: "30%" }} onClick={() => navigate("/simulation")}>Simulate Matchup</Button>
+    </Box>
     <br />
     <div className="page">
       <GameScheduleTable />

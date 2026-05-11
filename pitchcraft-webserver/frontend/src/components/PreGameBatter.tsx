@@ -1,4 +1,4 @@
-import { Stack, Typography } from "@mui/material";
+import { Box, Stack, styled, Typography } from "@mui/material";
 import { Player, PredictResponse } from "../types";
 import ModelGateway from "../modelGateway";
 import { useEffect, useState } from "react";
@@ -9,7 +9,7 @@ interface PreGameBatterProps {
   batter: Player
 }
 
-export default function PreGameBatter({ pitcher, batter }: PreGameBatterProps) {
+function PreGameBatterLogic({ pitcher, batter, ...props }: PreGameBatterProps) {
   const model = new ModelGateway();
   const [loading, setLoading] = useState(true);
   const [modelOutput, setModelOutput] = useState<PredictResponse | undefined>();
@@ -66,7 +66,7 @@ export default function PreGameBatter({ pitcher, batter }: PreGameBatterProps) {
     const charts = [];
     for (let i = 0; i < Math.min(modelOutput.sequence.length, 4); i++) {
       const step = modelOutput.sequence[i];
-      charts.push(<ProbabilityPieChart key={"chart" + i} size={100} data={{
+      charts.push(<ProbabilityPieChart key={"chart" + i} sx={{ minWidth: "256px" }} size={128} data={{
         pitchIndex: step.pitch_index,
         pitchType: step.pitch_type,
         ballsAfter: step.balls_after,
@@ -74,16 +74,19 @@ export default function PreGameBatter({ pitcher, batter }: PreGameBatterProps) {
         data: step.rnn_pitch_probs
       }} />);
     }
-    output = <Stack direction={{ xs: "column", sm: "row" }} spacing = {1}>
+    output = <Stack direction={{ xs: "column", sm: "row" }} sx={{ overflowX: "auto" }} spacing = {1}>
       {charts}
     </Stack>
   }
 
-  return <div>
+  return <Box {...props}>
     <Typography variant="h5">
-      {batter.first_name} {batter.last_name}
+      {batter.use_first_name} {batter.use_last_name}
     </Typography>
     {output}
     {error && <Typography>error</Typography>}
-  </div>
+  </Box>
 }
+
+const PreGameBatter = styled(PreGameBatterLogic)``;
+export default PreGameBatter;

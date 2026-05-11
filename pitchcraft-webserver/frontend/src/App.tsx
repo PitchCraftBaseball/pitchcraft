@@ -4,14 +4,43 @@ import Home from "./pages/Home";
 import Simulation from "./pages/Simulation";
 import Pregame from "./pages/Pregame";
 import { Box, createTheme, ThemeProvider } from "@mui/material";
-import { red } from "@mui/material/colors";
 
 const theme = createTheme({
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          colorScheme: "dark"
+        }
+      }
+    },
+    MuiModal: {
+      defaultProps: {
+        sx: {
+          borderRadius: 9
+        }
+      }
+    },
+    MuiAlert: {
+      defaultProps: {
+        variant: "outlined"
+      }
+    }
+  },
+  typography: {
+    fontFamily: "Sen"
+  },
   shadows: Array(25).fill("none"),
   palette: {
-    primary: {
-      main: red[500],
+    mode: "dark",
+    background: {
+      default: "#0e0a1a",
+      paper: "#140f26",
     },
+    primary: {
+      main: "#6655be",
+    },
+    divider: "#c2b8e6",
   },
 });
 

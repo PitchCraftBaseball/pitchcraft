@@ -5,7 +5,6 @@ import {
     Container,
     Divider,
   FormControl,
-  FormLabel,
   Grid,
   MenuItem,
   Paper,
@@ -68,25 +67,43 @@ export default function Pregame() {
   const reports = [];
   const batters = [];
   for (let i = 1; i < players.length; i++) {
-    reports.push(<PreGameBatter pitcher={players[0]} batter={players[i]} key={"report" + i} />);
+    reports.push(<PreGameBatter sx={{ mt: 1 }} pitcher={players[0]} batter={players[i]} key={"report" + i} />);
     batters.push(
       <div key={"batterDiv" + i}>
         <PlayerComboBox
+          sx={{
+            mt: 2,
+            "& .MuiOutlinedInput-notchedOutline": {
+              borderBottomLeftRadius: "0px",
+              borderBottomRightRadius: "0px"
+            }
+          }}
           value={players[i]}
           teamId={battingTeam}
           batters={true}
           alreadySelected={selectedPlayers}
+          label={"Batter " + i}
           onChange={(newValue) => { updatePlayer(i, newValue!) }}
           key={"batter" + i}
         />
-          <FormControl fullWidth size="small" sx={{ flex: 1 }}>
-            <Select value={outTypes[i-1]} onChange={(e) => updateOutTypes(i-1, e.target.value)}>
-              <MenuItem value="default">Default</MenuItem>
-              <MenuItem value="ground">Groundout</MenuItem>
-              <MenuItem value="fly">Flyout</MenuItem>
-              <MenuItem value="strike">Strikeout</MenuItem>
-            </Select>
-          </FormControl>
+        <FormControl fullWidth size="small" sx={{ flex: 1 }}>
+          <Select
+            sx={{
+              mt: "-1px",
+              "& .MuiOutlinedInput-notchedOutline": {
+                borderTopLeftRadius: "0px",
+                borderTopRightRadius: "0px"
+              },
+            }}
+            value={outTypes[i-1]}
+            onChange={(e) => updateOutTypes(i-1, e.target.value)}
+          >
+            <MenuItem value="default">Automatic Out Type</MenuItem>
+            <MenuItem value="ground">Groundout</MenuItem>
+            <MenuItem value="fly">Flyout</MenuItem>
+            <MenuItem value="strike">Strikeout</MenuItem>
+          </Select>
+        </FormControl>
         </div>
     );
   }
@@ -119,7 +136,7 @@ export default function Pregame() {
           Roster
         </Typography>
         <Divider />
-        <Typography>
+        <Typography sx={{ my: 1 }}>
           Pitcher
         </Typography>
         <PlayerComboBox
@@ -127,10 +144,10 @@ export default function Pregame() {
           teamId={pitchingTeam}
           batters={false}
           alreadySelected={selectedPlayers}
+          label={""}
           onChange={(newValue) => { updatePlayer(0, newValue!) }}
         />
-        <Divider />
-        <Typography>
+        <Typography sx={{ my: 1 }}>
           Batters
         </Typography>
         {batters}
