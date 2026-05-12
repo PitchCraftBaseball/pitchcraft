@@ -48,7 +48,7 @@ export default function Simulation() {
   const [inning, setInning] = useState(1);
   const [batScore, setBatScore] = useState("0");
   const [pitchScore, setPitchScore] = useState("0");
-  const [prevPitchType, setPrevPitchType] = useState("FF");
+  const [prevPitchType, setPrevPitchType] = useState("START");
 
   // Output
   const [respText, setRespText] = useState("");
@@ -85,8 +85,8 @@ export default function Simulation() {
 
   // Reset prev pitch type if selected pitcher doesn't throw it
   useEffect(() => {
-    if (!availablePitchTypes.includes(prevPitchType)) {
-      setPrevPitchType(availablePitchTypes[0]);
+    if (prevPitchType !== "START" && !availablePitchTypes.includes(prevPitchType)) {
+      setPrevPitchType("START");
     }
   }, [availablePitchTypes]);
 
@@ -324,9 +324,9 @@ export default function Simulation() {
             <Select
               value={prevPitchType}
               onChange={(e) => setPrevPitchType(String(e.target.value))}
-              disabled={!pitcher}
               inputProps={{ "data-testid": "prev-pitch-select" }}
             >
+              <MenuItem value="START">First Pitch</MenuItem>
               {availablePitchTypes.map((pt) => (
                 <MenuItem key={pt} value={pt}>{formatPitchType(pt)}</MenuItem>
               ))}
@@ -355,7 +355,7 @@ export default function Simulation() {
           </Box>
         )}
 
-        <Box sx={{ mt: 1 }}>
+        {/* <Box sx={{ mt: 1 }}>
           <TextField
             label="Response"
             value={respText}
@@ -368,7 +368,8 @@ export default function Simulation() {
         <Typography variant="body2" color="text.secondary">
           <b>Selected:</b> batter={batterLabel} pitcher={pitcherLabel}
         </Typography>
-
+      */}
+      
       </Stack>
     </Paper>
   );
