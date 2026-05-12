@@ -374,16 +374,10 @@ test.describe("Simulation Screen", () => {
     const btn = page.getByTestId("get-pitch-sequence-btn");
     await expect(btn).toBeEnabled();
     await btn.click();
-    // Pie charts should render
+    // Pie charts should render — one per sequence step in the mock response
     await expect(page.locator("svg").first()).toBeVisible({ timeout: 10_000 });
-    // Response textarea should contain JSON output
-    const responseField = page.getByLabel("Response");
-    await expect(responseField).not.toHaveValue("");
-    const responseText = await responseField.inputValue();
-    const parsed = JSON.parse(responseText);
-    expect(parsed).toHaveProperty("sequence");
-    expect(Array.isArray(parsed.sequence)).toBe(true);
-    expect(parsed.sequence.length).toBeGreaterThan(0);
+    // Verify a chart heading from the mock response appears
+    await expect(page.getByRole("heading", { name: /Pitch 0:.*FF/ })).toBeVisible();
   });
 
   test("SIMULATION_MISSING_INPUT", async ({ page }) => {
@@ -407,22 +401,24 @@ test.describe("Simulation Screen", () => {
   test("SIM_PREV_PITCH_NO_PITCHER", async ({ page }) => {
     const prevPitchSelect = page.getByTestId("prev-pitch-select");
     const prevPitchCombobox = prevPitchSelect.locator("../..").getByRole("combobox");
-    // No pitcher selected, dropdown disabled
-    await expect(prevPitchSelect).toBeDisabled();
+    await expect(prevPitchSelect).toHaveValue("START");
+    await expect(prevPitchSelect).toBeEnabled();
+    // With no pitcher selected, the dropdown still opens and shows at least "First Pitch"
+    await prevPitchCombobox.click();
+    await expect(page.getByRole("option", { name: "First Pitch", exact: true })).toBeVisible();
+    await page.keyboard.press("Escape");
     // Select a pitch team and pitcher
     await selectPitchTeam(page, "Philadelphia Phillies");
     await selectPitcher(page, "Zack Wheeler");
-    // Now it should be enabled
-    await expect(prevPitchSelect).toBeEnabled();
-    // Verify Wheeler's arsenal appears
+    // Now Wheeler's arsenal should appear alongside "First Pitch"
     await prevPitchCombobox.click();
+    await expect(page.getByRole("option", { name: "First Pitch", exact: true })).toBeVisible();
     await expect(page.getByRole("option", { name: /Sweeper/ })).toBeVisible();
-    // Close dropdown
     await page.keyboard.press("Escape");
-    // Change the pitch team, clearing pitcher
+    // Change the pitch team, clearing pitcher and reverting select to START
     await selectPitchTeam(page, "New York Yankees");
-    // Dropdown should be disabled again since pitcher was cleared
-    await expect(prevPitchSelect).toBeDisabled();
+    await expect(prevPitchSelect).toHaveValue("START");
+    await expect(prevPitchSelect).toBeEnabled();
   });
 
   test("SIM_CHANGE_TEAM", async ({ page }) => {
