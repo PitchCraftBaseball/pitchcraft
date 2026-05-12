@@ -12,7 +12,8 @@ export default function Navbar() {
       backgroundColor: (theme) => alpha(theme.palette.background.default, 0.6),
       borderBottom: 1,
       borderColor: (theme) => alpha(theme.palette.divider, 0.3),
-      mb: 2
+      mb: 2,
+      displayPrint: "none"
     }}>
       <CssBaseline />
         <Container>

@@ -54,15 +54,27 @@ function ProbabilityPieChartLogic({ size, data, ...props }: ProbabilityPieChartP
     return;
   }
 
+  const pieSlices = buildPieData(data.data);
+  console.log(pieSlices);
+  const printReport = [];
+  for (let i = 0; i < pieSlices.length; i++) {
+    printReport.push(
+      <Typography key={"printReport" + i} sx={{ display: "none", displayPrint: "block" }}>
+        {pieSlices[i].id == "__other__" ? "Other" : formatPitchType(pieSlices[i].id)}: {(pieSlices[i].value * 100).toFixed(2)}%
+      </Typography>
+    );
+  }
+
   return <Paper sx={{ p: 2, width: "100%" }} {...props}>
     <Typography variant="subtitle1" sx={{ mb: 1 }}>
-      Pitch {data.pitchIndex}: {formatPitchType(data.pitchType)} (Count: {data.ballsAfter}-{data.strikesAfter})
+      Pitch {data.pitchIndex}: {formatPitchType(data.pitchType)}<br />Count: {data.ballsAfter}-{data.strikesAfter}
     </Typography>
     <PieChart
+      sx={{ displayPrint: "none" }}
       height={size}
       series={[
         {
-          data: buildPieData(data.data),
+          data: pieSlices,
           valueFormatter: (item) => `${(item.value * 100).toFixed(1)}%`,
         },
       ]}
@@ -73,6 +85,7 @@ function ProbabilityPieChartLogic({ size, data, ...props }: ProbabilityPieChartP
         }
       }}
     />
+    {printReport}
   </Paper>;
 }
 

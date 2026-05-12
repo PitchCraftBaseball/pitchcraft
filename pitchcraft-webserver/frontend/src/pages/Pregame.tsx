@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router";
 import {
+    Button,
     Chip,
     Container,
     Divider,
@@ -18,6 +19,7 @@ import PreGameBatter from "../components/PreGameBatter";
 import pitchArsenal from "../data/pitch_arsenal.json";
 import pitchColors from "../data/pitch_colors.json";
 import { ArsenalEntry, Colors, formatPitchType } from "../shared";
+import { Print } from "@mui/icons-material";
 
 type OutType = "default" | "ground" | "fly" | "strike";
 
@@ -119,7 +121,7 @@ export default function Pregame() {
       const color = (pitchColors as Colors)[keys[i]].color;
       arsenal.push(
         <Stack direction="column" spacing={1} key={"pitcherArsenalStack" + i}>
-          <Chip size="small" sx={{ bgcolor: color, color: color, userSelect: "none" }} />
+          <Chip size="small" sx={{ bgcolor: color, color: color, userSelect: "none", displayPrint: "none" }} />
           <Typography align="center">
             {formatPitchType(keys[i]) + ": " + (year.pitch_type_percentage[keys[i]] * 100).toFixed(2) + "%"}
           </Typography>
@@ -131,7 +133,8 @@ export default function Pregame() {
 
   return <Container>
     <Grid container spacing={2}>
-      <Grid size={3}>
+      <Grid size={3} sx={{ displayPrint: "none" }}>
+        <Button variant="contained" startIcon={<Print />} onClick={() => window.print()} sx={{ mb: 1, p: 2, width: "100%" }}>Print Report </Button>
         <Typography variant="h5">
           Roster
         </Typography>

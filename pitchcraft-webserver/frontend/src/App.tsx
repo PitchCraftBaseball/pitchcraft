@@ -11,6 +11,14 @@ const theme = createTheme({
       styleOverrides: {
         body: {
           colorScheme: "dark"
+        },
+        "@media print": {
+          body: {
+            color: "#000 !important"
+          },
+          ".MuiTypography-root": {
+            color: "#000 !important"
+          }
         }
       }
     },

@@ -74,12 +74,13 @@ function PreGameBatterLogic({ pitcher, batter, ...props }: PreGameBatterProps) {
         data: step.rnn_pitch_probs
       }} />);
     }
-    output = <Stack direction={{ xs: "column", sm: "row" }} sx={{ overflowX: "auto" }} spacing = {1}>
+    // TODO: wrap results for printing 5+ pitches
+    output = <Stack direction={{ xs: "column", sm: "row" }} sx={{ overflowX: "auto", "@media print": { overflowX: "visible" } }} spacing = {1}>
       {charts}
     </Stack>
   }
 
-  return <Box {...props}>
+  return <Box {...props} sx={{ "@media print": { display: "block", breakInside: "avoid" }}}>
     <Typography variant="h5">
       {batter.use_first_name} {batter.use_last_name}
     </Typography>
