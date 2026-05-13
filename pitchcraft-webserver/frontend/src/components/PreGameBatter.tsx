@@ -66,7 +66,7 @@ function PreGameBatterLogic({ pitcher, batter, ...props }: PreGameBatterProps) {
     const charts = [];
     for (let i = 0; i < Math.min(modelOutput.sequence.length, 4); i++) {
       const step = modelOutput.sequence[i];
-      charts.push(<ProbabilityPieChart key={"chart" + i} sx={{ minWidth: "256px" }} size={128} data={{
+      charts.push(<ProbabilityPieChart key={"chart" + i} sx={{ minWidth: "192px", "@media print": { flex: "1" } }} size={128} data={{
         pitchIndex: step.pitch_index,
         pitchType: step.pitch_type,
         ballsAfter: step.balls_after,
@@ -74,8 +74,7 @@ function PreGameBatterLogic({ pitcher, batter, ...props }: PreGameBatterProps) {
         data: step.rnn_pitch_probs
       }} />);
     }
-    // TODO: wrap results for printing 5+ pitches
-    output = <Stack direction={{ xs: "column", sm: "row" }} sx={{ overflowX: "auto", "@media print": { overflowX: "visible" } }} spacing = {1}>
+    output = <Stack direction={{ xs: "column", sm: "row" }} useFlexGap sx={{ overflowX: "auto", "@media print": { flexWrap: "wrap", overflowX: "visible" } }} spacing = {1}>
       {charts}
     </Stack>
   }

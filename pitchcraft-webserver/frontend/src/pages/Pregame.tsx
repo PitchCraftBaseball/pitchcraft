@@ -134,7 +134,7 @@ export default function Pregame() {
   return <Container>
     <Grid container spacing={2}>
       <Grid size={3} sx={{ displayPrint: "none" }}>
-        <Button variant="contained" startIcon={<Print />} onClick={() => window.print()} sx={{ mb: 1, p: 2, width: "100%" }}>Print Report </Button>
+        <Button variant="contained" startIcon={<Print />} onClick={() => window.print()} sx={{ mb: 1, p: 2, width: "100%" }}>Print Report</Button>
         <Typography variant="h5">
           Roster
         </Typography>
