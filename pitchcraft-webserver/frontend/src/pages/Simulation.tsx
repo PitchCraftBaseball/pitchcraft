@@ -142,7 +142,7 @@ export default function Simulation() {
 
   const charts = [];
   if (modelOutput) {
-    for (let i = 0; i < Math.min(modelOutput.sequence.length, 4); i++) {
+    for (let i = 0; i < modelOutput.sequence.length; i++) {
       const step = modelOutput.sequence[i];
       charts.push(<ProbabilityPieChart size={256} sx={{ minWidth: "400px" }} data={{
         pitchIndex: step.pitch_index,

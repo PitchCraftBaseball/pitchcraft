@@ -64,7 +64,7 @@ function PreGameBatterLogic({ pitcher, batter, ...props }: PreGameBatterProps) {
     output = <Typography>Loading...</Typography>;
   } else if (modelOutput) {
     const charts = [];
-    for (let i = 0; i < Math.min(modelOutput.sequence.length, 4); i++) {
+    for (let i = 0; i < modelOutput.sequence.length; i++) {
       const step = modelOutput.sequence[i];
       charts.push(<ProbabilityPieChart key={"chart" + i} sx={{ minWidth: "192px", "@media print": { flex: "1" } }} size={128} data={{
         pitchIndex: step.pitch_index,
