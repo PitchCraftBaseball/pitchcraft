@@ -39,7 +39,7 @@ export default function Simulation() {
   const [inning, setInning] = useState(1);
   const [batScore, setBatScore] = useState("0");
   const [pitchScore, setPitchScore] = useState("0");
-  const [prevPitchType, setPrevPitchType] = useState("FF");
+  const [prevPitchType, setPrevPitchType] = useState("START");
 
   // Output
   const [modelOutput, setModelOutput] = useState<PredictResponse | null>(null);
@@ -67,8 +67,8 @@ export default function Simulation() {
 
   // Reset prev pitch type if selected pitcher doesn't throw it
   useEffect(() => {
-    if (!availablePitchTypes.includes(prevPitchType)) {
-      setPrevPitchType(availablePitchTypes[0]);
+    if (prevPitchType !== "START" && !availablePitchTypes.includes(prevPitchType)) {
+      setPrevPitchType("START");
     }
   }, [availablePitchTypes]);
 
@@ -99,11 +99,13 @@ export default function Simulation() {
     value,
     options,
     onChange,
+    testId,
   }: {
     label: string;
     value: number;
     options: number[];
     onChange: (v: number) => void;
+    testId?: string;
   }) {
     return (
       <FormControl fullWidth size="small">
@@ -114,6 +116,7 @@ export default function Simulation() {
           value={value}
           onChange={(_, v) => v !== null && onChange(v)}
           size="small"
+          data-testid={testId}
         >
           {options.map((n) => (
             <ToggleButton key={n} value={n}>
@@ -173,6 +176,7 @@ export default function Simulation() {
                 handleBatTeamChange(v === "" ? "" : Number(v));
               }}
               displayEmpty
+              inputProps={{ "data-testid": "bat-team-select" }}
             >
               <MenuItem value=""><em>Select…</em></MenuItem>
               {TEAMS.map((t) => (
@@ -190,6 +194,7 @@ export default function Simulation() {
                 handlePitchTeamChange(v === "" ? "" : Number(v));
               }}
               displayEmpty
+              inputProps={{ "data-testid": "pitch-team-select" }}
             >
               <MenuItem value=""><em>Select…</em></MenuItem>
               {TEAMS.map((t) => (
@@ -226,16 +231,16 @@ export default function Simulation() {
 
         {/* Count / outs */}
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-          <NumToggle label="Balls"   value={balls}   options={[0, 1, 2, 3]} onChange={setBalls} />
-          <NumToggle label="Strikes" value={strikes} options={[0, 1, 2]}    onChange={setStrikes} />
-          <NumToggle label="Outs"    value={outs}    options={[0, 1, 2]}    onChange={setOuts} />
+          <NumToggle label="Balls"   value={balls}   options={[0, 1, 2, 3]} onChange={setBalls}   testId="balls-toggle" />
+          <NumToggle label="Strikes" value={strikes} options={[0, 1, 2]}    onChange={setStrikes} testId="strikes-toggle" />
+          <NumToggle label="Outs"    value={outs}    options={[0, 1, 2]}    onChange={setOuts}    testId="outs-toggle" />
         </Stack>
 
         {/* Runners / inning */}
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems="stretch">
           <FormControl size="small" sx={{ flex: 1 }}>
             <FormLabel sx={{ mb: 0.5 }}>Runners on</FormLabel>
-            <ToggleButtonGroup value={runnersOn} onChange={(_, v) => setRunnersOn(v)} size="small">
+            <ToggleButtonGroup value={runnersOn} onChange={(_, v) => setRunnersOn(v)} size="small" data-testid="runners-toggle">
               <ToggleButton value="1B" sx={{ flex: 1 }}>1B</ToggleButton>
               <ToggleButton value="2B" sx={{ flex: 1 }}>2B</ToggleButton>
               <ToggleButton value="3B" sx={{ flex: 1 }}>3B</ToggleButton>
@@ -244,7 +249,7 @@ export default function Simulation() {
 
           <FormControl fullWidth size="small" sx={{ flex: 1 }}>
             <FormLabel sx={{ mb: 0.5 }}>Inning half</FormLabel>
-            <Select value={inningHalf} onChange={(e) => setInningHalf(e.target.value as "top" | "bottom")}>
+            <Select value={inningHalf} onChange={(e) => setInningHalf(e.target.value as "top" | "bottom")} inputProps={{ "data-testid": "inning-half-select" }}>
               <MenuItem value="top">Top</MenuItem>
               <MenuItem value="bottom">Bottom</MenuItem>
             </Select>
@@ -252,7 +257,7 @@ export default function Simulation() {
 
           <FormControl fullWidth size="small" sx={{ flex: 1 }}>
             <FormLabel sx={{ mb: 0.5 }}>Inning</FormLabel>
-            <Select value={inning} onChange={(e) => setInning(Number(e.target.value))}>
+            <Select value={inning} onChange={(e) => setInning(Number(e.target.value))} inputProps={{ "data-testid": "inning-select" }}>
               {INNING_OPTIONS.map((n) => (
                 <MenuItem key={n} value={n}>{n === 10 ? "10+" : n}</MenuItem>
               ))}
@@ -274,7 +279,7 @@ export default function Simulation() {
                 if (v === "" || /^\d+$/.test(v)) setBatScore(v);
               }}
               onBlur={() => setBatScore(String(Math.max(0, parseInt(batScore) || 0)))}
-              inputProps={{ min: 0 }}
+              inputProps={{ min: 0, "data-testid": "bat-score-input" }}
             />
           </FormControl>
 
@@ -290,13 +295,18 @@ export default function Simulation() {
                 if (v === "" || /^\d+$/.test(v)) setPitchScore(v);
               }}
               onBlur={() => setPitchScore(String(Math.max(0, parseInt(pitchScore) || 0)))}
-              inputProps={{ min: 0 }}
+              inputProps={{ min: 0, "data-testid": "pitch-score-input" }}
             />
           </FormControl>
 
           <FormControl fullWidth size="small">
             <FormLabel sx={{ mb: 0.5 }}>Previous pitch type</FormLabel>
-            <Select value={prevPitchType} onChange={(e) => setPrevPitchType(String(e.target.value))}>
+            <Select
+              value={prevPitchType}
+              onChange={(e) => setPrevPitchType(String(e.target.value))}
+              inputProps={{ "data-testid": "prev-pitch-select" }}
+            >
+              <MenuItem value="START">First Pitch</MenuItem>
               {availablePitchTypes.map((pt) => (
                 <MenuItem key={pt} value={pt}>{formatPitchType(pt)}</MenuItem>
               ))}
@@ -309,7 +319,8 @@ export default function Simulation() {
           size="large"
           fullWidth
           onClick={run}
-          disabled={loading || !batter || !pitcher}
+          disabled={loading || !batTeamId || !pitchTeamId || !batter || !pitcher}
+          data-testid="get-pitch-sequence-btn"
         >
           {loading ? "Sending..." : "Get Pitch Sequence"}
         </Button>
