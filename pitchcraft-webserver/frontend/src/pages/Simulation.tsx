@@ -214,6 +214,7 @@ export default function Simulation() {
               value={batter}
               alreadySelected={new Set()}
               onChange={setBatter}
+              label={"Select Batter"}
             />
           </FormControl>
 
@@ -225,6 +226,7 @@ export default function Simulation() {
               value={pitcher}
               alreadySelected={new Set()}
               onChange={setPitcher}
+              label={"Select Pitcher"}
             />
           </FormControl>
         </Stack>

@@ -11,7 +11,7 @@ test.describe("Home screen", () => {
   });
 
   test("navigation buttons route to the correct pages", async ({ page }) => {
-    await page.getByRole("button", { name: "Simulation" }).click();
+    await page.getByRole("button", { name: "Simulate Matchup" }).click();
     await expect(page).toHaveURL(/\/simulation/);
 
     await page.goto("/");
