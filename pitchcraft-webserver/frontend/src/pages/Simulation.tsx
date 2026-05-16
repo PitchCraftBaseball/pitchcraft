@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { type Player, type PitchProbMap, type PieSlice, PredictResponse } from "../types";
+import { type Player, PredictResponse } from "../types";
 import { TEAMS, PITCH_TYPES, INNING_OPTIONS, formatPitchType, getPitcherArsenal } from "../shared";
 import {
   Button,
   FormControl,
   FormLabel,
-  Grid,
   MenuItem,
-  Paper,
   Select,
   Stack,
   TextField,
@@ -15,20 +13,13 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Box,
+  Container,
 } from "@mui/material";
 import PlayerComboBox from "../components/PlayerComboBox";
 import ModelGateway from "../modelGateway";
 import ProbabilityPieChart from "../components/ProbabilityPieChart";
 
 type TeamId = number | "";
-
-type ChartEntry = {
-  pitchIndex: number;
-  pitchType: string;
-  ballsAfter: number;
-  strikesAfter: number;
-  data: PieSlice[];
-};
 
 export default function Simulation() {
   // Team selection
@@ -51,7 +42,6 @@ export default function Simulation() {
   const [prevPitchType, setPrevPitchType] = useState("START");
 
   // Output
-  const [respText, setRespText] = useState("");
   const [modelOutput, setModelOutput] = useState<PredictResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
@@ -73,14 +63,6 @@ export default function Simulation() {
     if (!pitcher) return PITCH_TYPES as unknown as string[];
     const arsenal = getPitcherArsenal(pitcher.id);
     return arsenal.length > 0 ? arsenal : PITCH_TYPES as unknown as string[];
-  }, [pitcher]);
-
-  const batterLabel = useMemo(() => {
-    return batter ? `${batter.use_first_name} ${batter.use_last_name}` : "";
-  }, [batter]);
-
-  const pitcherLabel = useMemo(() => {
-    return pitcher ? `${pitcher.use_first_name} ${pitcher.use_last_name}` : "";
   }, [pitcher]);
 
   // Reset prev pitch type if selected pitcher doesn't throw it
@@ -149,7 +131,6 @@ export default function Simulation() {
   async function run(): Promise<void> {
     setErr("");
     setModelOutput(null);
-    setRespText("");
 
     setLoading(true);
     const response = await model.run(buildBody());
@@ -159,15 +140,14 @@ export default function Simulation() {
       setModelOutput(payload);
     }
 
-    setRespText(response.text);
     setLoading(false);
   }
 
   const charts = [];
   if (modelOutput) {
-    for (let i = 0; i < Math.min(modelOutput.sequence.length, 4); i++) {
+    for (let i = 0; i < modelOutput.sequence.length; i++) {
       const step = modelOutput.sequence[i];
-      charts.push(<ProbabilityPieChart size={260} data={{
+      charts.push(<ProbabilityPieChart size={256} sx={{ minWidth: "400px" }} data={{
         pitchIndex: step.pitch_index,
         pitchType: step.pitch_type,
         ballsAfter: step.balls_after,
@@ -178,8 +158,8 @@ export default function Simulation() {
   }
 
   return (
-    <Paper sx={{ p: 2 }}>
-      <Typography variant="h5" sx={{ mb: 2 }}>
+    <Container sx={{ mt: 2 }}>
+      <Typography variant="h4" sx={{ mb: 2 }} align="center">
         Model Simulation
       </Typography>
 
@@ -349,28 +329,12 @@ export default function Simulation() {
 
         {charts.length > 0 && (
           <Box sx={{ my: 1 }}>
-            <Grid container columnSpacing={2} rowSpacing={2} alignItems="stretch">
+            <Stack direction="row" sx={{ overflowX: "auto" }} spacing = {1}>
               {charts}
-            </Grid>
+            </Stack>
           </Box>
         )}
-
-        {/* <Box sx={{ mt: 1 }}>
-          <TextField
-            label="Response"
-            value={respText}
-            minRows={6}
-            fullWidth
-            multiline
-          />
-        </Box>
-
-        <Typography variant="body2" color="text.secondary">
-          <b>Selected:</b> batter={batterLabel} pitcher={pitcherLabel}
-        </Typography>
-      */}
-      
       </Stack>
-    </Paper>
+    </Container>
   );
 }
