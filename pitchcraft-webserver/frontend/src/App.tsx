@@ -10,16 +10,40 @@ const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          colorScheme: "dark"
+          colorScheme: "dark",
+          "& *::-webkit-scrollbar-button": {
+            display: "none"
+          },
+          "& *::-webkit-scrollbar-thumb": {
+            backgroundColor: "#c2b8e6",
+            borderRadius: "10px",
+            border: "2px solid transparent",
+            backgroundClip: "content-box"
+          },
+          "& *::-webkit-scrollbar": {
+            backgroundColor: "transparent",
+            width: "8px",
+            height: "8px"
+          },
+          "& *::-webkit-scrollbar-button:single-button:vertical:decrement": {
+            height: "16px",
+            display: "block",
+            background: "transparent",
+          },
+          "& *::-webkit-scrollbar-button:single-button:vertical:increment": {
+            height: "16px",
+            display: "block",
+            background: "transparent",
+          },
         },
         "@media print": {
           body: {
-            color: "#000 !important"
+            color: "#000 !important",
           },
           ".MuiTypography-root": {
             color: "#000 !important"
-          }
-        }
+          },
+        },
       }
     },
     MuiModal: {
