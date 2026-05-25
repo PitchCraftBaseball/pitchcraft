@@ -1,7 +1,7 @@
 import { Container, Typography } from "@mui/material";
 
 export default function Guide() {
-  return <Container>
+  return <Container data-testid="user-guide">
     <Typography variant="h4">Overview</Typography>
     <Typography>
       PitchCraft is a tool that identifies optimal pitch sequencing strategies based on the matchup between a given MLB pitcher and batter.

@@ -9,7 +9,7 @@ import { alpha, Stack, Table, TableBody, TableCell, TableContainer, TableRow } f
 import { Box, Button, IconButton, Modal, Paper, Typography } from "@mui/material";
 import PlayerComboBox from "../components/PlayerComboBox";
 import { Player } from "../types";
-import { TEAMS } from "../shared";
+import { boxStyle, TEAMS } from "../shared";
 import CloseIcon from "@mui/icons-material/Close";
 import Alert from '@mui/material/Alert';
 import ChevronLeft from "@mui/icons-material/ChevronLeft";
@@ -28,22 +28,6 @@ type ScheduleRow = {
 };
 
 dayjs.extend(utc);
-
-const style = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  maxHeight: "75%",
-  overflowY: "auto",
-  transform: "translate(-50%, -50%)",
-  width: 800,
-  backdropFilter: "blur(8px)",
-  backgroundColor: (theme) => alpha(theme.palette.background.default, 0.6),
-  borderRadius: 4,
-  border: 1,
-  borderColor: "divider",
-  p: 2,
-};
 
 export default function GameScheduleTable() {
   const [gameDate, setGameDate] = useState<Dayjs | null>(dayjs());
@@ -286,7 +270,7 @@ export default function GameScheduleTable() {
         open={open}
         onClose={closeReportPopup}
       >
-        <Box sx={style}>
+        <Box sx={boxStyle}>
           <IconButton
             aria-label="close pregame popup"
             onClick={(event) => closeReportPopup(event, "closeButtonClick")}

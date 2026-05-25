@@ -4,7 +4,6 @@ import Home from "./pages/Home";
 import Simulation from "./pages/Simulation";
 import Pregame from "./pages/Pregame";
 import { Box, createTheme, ThemeProvider } from "@mui/material";
-import Guide from "./pages/Guide";
 
 const theme = createTheme({
   components: {
@@ -86,7 +85,6 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/simulation" element={<Simulation />} />
           <Route path="/pregame" element={<Pregame />} />
-          <Route path="/guide" element={<Guide />} />
           <Route path="*" element={<p>404</p>} />
         </Routes>
       </Box>
