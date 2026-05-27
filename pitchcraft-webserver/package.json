@@ -2,5 +2,8 @@
   "dependencies": {
     "@mui/x-date-pickers": "^8.27.0",
     "dayjs": "^1.11.19"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1"
   }
 }
