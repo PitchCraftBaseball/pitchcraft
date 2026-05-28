@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx playwright *)",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\Users\\\\mmadd\\\\Desktop\\\\Repositories\\\\pitchcraft\\\\pitchcraft-webserver\" -Force | ForEach-Object { $_.Name })",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\Users\\\\mmadd\\\\Desktop\\\\Repositories\\\\pitchcraft\\\\pitchcraft-webserver\\\\backend\" -Recurse -Force | ForEach-Object { $_.FullName.Replace\\('c:\\\\Users\\\\mmadd\\\\Desktop\\\\Repositories\\\\pitchcraft\\\\pitchcraft-webserver\\\\backend', ''\\) } | head -50)",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\Users\\\\mmadd\\\\Desktop\\\\Repositories\\\\pitchcraft\\\\pitchcraft-webserver\\\\backend\" -Recurse -Force | Select-Object -First 100 FullName | ForEach-Object { $_.FullName.Replace\\('c:\\\\Users\\\\mmadd\\\\Desktop\\\\Repositories\\\\pitchcraft\\\\pitchcraft-webserver\\\\backend\\\\', ''\\).Replace\\('c:\\\\Users\\\\mmadd\\\\Desktop\\\\Repositories\\\\pitchcraft\\\\pitchcraft-webserver\\\\backend', ''\\) })",
+      "PowerShell(docker info 2>&1)",
+      "PowerShell(Get-Command psql -ErrorAction SilentlyContinue)",
+      "Bash(find \"C:\\\\Users\\\\mmadd\\\\Desktop\\\\Repositories\\\\pitchcraft-model\" -type f | head -50)",
+      "Read(//c/Users/mmadd/Desktop/Repositories/pitchcraft-model/**)",
+      "PowerShell(Get-Command pdftotext -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-Command mutool -ErrorAction SilentlyContinue)",
+      "PowerShell(python -c \"import pdfminer\" 2>$null)",
+      "PowerShell(python -c \"import pypdf; r=pypdf.PdfReader\\('C:/Users/mmadd/Desktop/SystemTestPlan.pdf'\\); [print\\(r.pages[i].extract_text\\(\\)\\) for i in range\\(len\\(r.pages\\)\\)]\" 2>&1)",
+      "PowerShell(python -c \"import pdfplumber; pdf=pdfplumber.open\\('C:/Users/mmadd/Desktop/SystemTestPlan.pdf'\\); [print\\(p.extract_text\\(\\)\\) for p in pdf.pages]\" 2>&1)",
+      "PowerShell(pip install pypdf --quiet 2>&1)",
+      "PowerShell(tail -1)",
+      "PowerShell(python -c \"import pypdf; r=pypdf.PdfReader\\('C:/Users/mmadd/Desktop/SystemTestPlan.pdf'\\); print\\('pages:', len\\(r.pages\\)\\); [print\\('--- PAGE', i+1, '---\\\\n', r.pages[i].extract_text\\(\\)\\) for i in range\\(len\\(r.pages\\)\\)]\" 2>&1)",
+      "PowerShell(pip install pypdf --quiet)",
+      "PowerShell(python -c \"import pypdf; r=pypdf.PdfReader\\('C:/Users/mmadd/Desktop/SystemTestPlan.pdf'\\); print\\('pages:', len\\(r.pages\\)\\); [print\\('--- PAGE', i+1, '---'\\); print\\(r.pages[i].extract_text\\(\\)\\) for i in range\\(len\\(r.pages\\)\\)]\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\mmadd\\\\Desktop\\\\Repositories\\\\pitchcraft\\\\pitchcraft-webserver\\\\frontend\\\\src\" -Recurse -Filter \"*.tsx\" -o Name)",
+      "Bash(Select-Object -First 20)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\mmadd\\\\Desktop\\\\Repositories\\\\pitchcraft-model\" -Force)",
+      "Bash(Select-Object Name, Mode)",
+      "Bash(Format-Table -AutoSize)",
+      "Bash(python -c \"import fitz; doc=fitz.open\\(r'C:\\\\Users\\\\mmadd\\\\Desktop\\\\SystemTestPlan.pdf'\\); [print\\(doc[i].get_text\\(\\)\\) for i in range\\(min\\(30,len\\(doc\\)\\)\\)]\")"
+    ]
+  }
+}

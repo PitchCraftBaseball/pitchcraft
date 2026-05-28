@@ -69,7 +69,7 @@ export default function Pregame() {
   const reports = [];
   const batters = [];
   for (let i = 1; i < players.length; i++) {
-    reports.push(<PreGameBatter sx={{ mt: 1 }} pitcher={players[0]} batter={players[i]} key={"report" + i} />);
+    reports.push(<PreGameBatter sx={{ mt: 1 }} pitcher={players[0]} batter={players[i]} outType={outTypes[i-1]} key={"report" + i} />);
     batters.push(
       <div key={"batterDiv" + i}>
         <PlayerComboBox
@@ -99,6 +99,7 @@ export default function Pregame() {
             }}
             value={outTypes[i-1]}
             onChange={(e) => updateOutTypes(i-1, e.target.value)}
+            inputProps={{ "data-testid": "pgr-out-type-" + (i-1) }}
           >
             <MenuItem value="default">Automatic Out Type</MenuItem>
             <MenuItem value="ground">Groundout</MenuItem>
@@ -147,7 +148,7 @@ export default function Pregame() {
           teamId={pitchingTeam}
           batters={false}
           alreadySelected={selectedPlayers}
-          label={""}
+          label={"Pitcher"}
           onChange={(newValue) => { updatePlayer(0, newValue!) }}
         />
         <Typography sx={{ my: 1 }}>
