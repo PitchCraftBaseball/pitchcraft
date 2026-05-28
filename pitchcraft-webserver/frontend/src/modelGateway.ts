@@ -18,6 +18,7 @@ interface ModelParameters {
   on1b: number,
   on2b: number,
   on3b: number,
+  preferredOutType?: string | null,
 }
 
 export default class ModelGateway {
@@ -29,6 +30,7 @@ export default class ModelGateway {
       pitcher_features: parameters.pitcherFeatures,
       batter: parameters.batter,
       batter_features: parameters.batterFeatures,
+      preferred_out_type: parameters.preferredOutType ?? null,
       state_features: {
         inning: parameters.inning,
         inning_topbot: parameters.inningTopBot,

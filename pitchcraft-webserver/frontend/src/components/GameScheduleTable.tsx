@@ -35,6 +35,8 @@ const style = {
   left: "50%",
   transform: "translate(-50%, -50%)",
   width: 800,
+  maxHeight: "90vh",
+  overflowY: "auto",
   backdropFilter: "blur(8px)",
   backgroundColor: (theme) => alpha(theme.palette.background.default, 0.6),
   borderRadius: 4,
@@ -194,6 +196,7 @@ export default function GameScheduleTable() {
 
   const onClearClick = () => {
     setPlayers(Array(10).fill(null));
+    setSelectedPlayers(new Set());
     battingTeam === homeTeamId ? setHomeLineupEdited(true) : setAwayLineupEdited(true);
   }
 

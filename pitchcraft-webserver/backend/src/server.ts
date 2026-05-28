@@ -1,5 +1,5 @@
 import "dotenv/config";
-import express, { Request, Response } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import morgan from "morgan";
 import cors from "cors";
 import helmet from "helmet";
@@ -85,6 +85,14 @@ app.post("/api/model/predict", modelLimiter, async (req, res) => {
 app.use("/api/schedule", scheduleRouter);
 app.use("/api/players", playersRouter);
 app.use("/api", (_req: Request, res: Response) => res.status(404).json({ error: "not_found" }));
+
+// Return JSON for body-parser parse failures so frontend error handling doesn't break
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  if (err.type === "entity.parse.failed") {
+    return res.status(400).json({ error: "invalid_json" });
+  }
+  res.status(err.status ?? 500).json({ error: "internal_server_error" });
+});
 
 app.listen(PORT, () => {
   console.log(`Node API listening on :${PORT}`);
