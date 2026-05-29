@@ -4,6 +4,7 @@ import { prisma } from "../services/db.js";
 let scheduleRouter = express.Router(); 
 
 scheduleRouter.get("/date", async (req, res) => { 
+  // Express can return query params as arrays if the key is repeated; unwrap to a single string.
   const dateParam = Array.isArray(req.query.date)
     ? req.query.date[0]
     : req.query.date;
@@ -37,6 +38,7 @@ scheduleRouter.get("/date", async (req, res) => {
       return res.status(400).json({ error: "Invalid date" });
     }
 
+    // Subtract the tz offset to get UTC midnight corresponding to local midnight.
     const utcStartMs = Date.UTC(year, month - 1, day, 0, 0, 0, 0) - (tzOffsetMinutes * 60 * 1000);
     start = new Date(utcStartMs);
     end = new Date(utcStartMs + 24 * 60 * 60 * 1000 - 1);

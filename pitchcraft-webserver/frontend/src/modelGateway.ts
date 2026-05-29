@@ -21,6 +21,7 @@ interface ModelParameters {
   preferredOutType?: string | null,
 }
 
+// Thin wrapper around /api/model/predict. Formats the request body and parses the response.
 export default class ModelGateway {
   public async run(parameters: ModelParameters): Promise<{ success: boolean, text: string, payload?: PredictResponse }> {
     const body = {
@@ -76,6 +77,7 @@ export default class ModelGateway {
     }
   }
 
+  // Pretty-prints JSON for console output; returns the raw string if parsing fails.
   private  pretty(j: string): string {
     try {
       return JSON.stringify(JSON.parse(j), null, 2);

@@ -374,7 +374,7 @@ test.describe("Simulation Screen", () => {
     const btn = page.getByTestId("get-pitch-sequence-btn");
     await expect(btn).toBeEnabled();
     await btn.click();
-    // Pie charts should render — one per sequence step in the mock response
+    // Pie charts should render, one per sequence step in the mock response
     await expect(page.locator("svg").first()).toBeVisible({ timeout: 10_000 });
     // Verify a chart heading from the mock response appears
     await expect(page.getByRole("heading", { name: /Pitch 0:.*FF/ })).toBeVisible();
@@ -415,7 +415,8 @@ test.describe("Simulation Screen", () => {
     await expect(page.getByRole("option", { name: "First Pitch", exact: true })).toBeVisible();
     await expect(page.getByRole("option", { name: /Sweeper/ })).toBeVisible();
     await page.keyboard.press("Escape");
-    // Change the pitch team, clearing pitcher and reverting select to START
+    // Changing the team clears the pitcher selection, which triggers the useEffect that
+    // resets prevPitchType to START when the selected pitch isn't in the new arsenal.
     await selectPitchTeam(page, "New York Yankees");
     await expect(prevPitchSelect).toHaveValue("START");
     await expect(prevPitchSelect).toBeEnabled();

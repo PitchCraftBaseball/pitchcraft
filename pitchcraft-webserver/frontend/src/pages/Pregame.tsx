@@ -50,6 +50,7 @@ export default function Pregame() {
     setOutTypes(temp);
   }
 
+  // Redirect to home if someone navigates directly to /pregame without state.
   useEffect(() => {
     if (!state || !("players" in state)) {
       navigate("/");
@@ -63,6 +64,7 @@ export default function Pregame() {
     return;
   }
 
+  // Convention: players[0] is the pitcher, players[1-9] are the batters.
   let pitchingTeam = players[0].team_id;
   let battingTeam = players[1].team_id;
 
@@ -115,6 +117,7 @@ export default function Pregame() {
   let arsenal = [];
   let pitcherProfileError;
   const entry = (pitchArsenal as Record<string, ArsenalEntry>)[players[0].id];
+  // Use 2025 data if available, otherwise fall back to 2024.
   const year = entry["2025"] ?? entry["2024"];
   if (year) {
     const keys = Object.keys(year.pitch_type_percentage);
