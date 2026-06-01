@@ -34,6 +34,7 @@ function PlayerComboBoxLogic({ teamId, batters, value, onChange, alreadySelected
 
     if (!teamId) return;
 
+    // Prevents a stale fetch from an old teamId from overwriting a newer result.
     let cancelled = false;
 
     fetchPlayers(teamId, batters).then((result) => {

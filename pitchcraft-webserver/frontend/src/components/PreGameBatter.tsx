@@ -16,6 +16,7 @@ function PreGameBatterLogic({ pitcher, batter, outType, ...props }: PreGameBatte
   const [modelOutput, setModelOutput] = useState<PredictResponse | undefined>();
   const [error, setError] = useState("");
 
+  // Maps UI option strings to the model's preferred_out_type param; null means let the model decide.
   const OUT_TYPE_MAP: Record<string, string | null> = {
     default: null,
     ground: "groundout",
@@ -64,6 +65,7 @@ function PreGameBatterLogic({ pitcher, batter, outType, ...props }: PreGameBatte
     setLoading(false);
   }
 
+  // Re-run the prediction whenever the matchup or preferred out type changes.
   useEffect(() => {
     run();
   }, [pitcher, batter, outType]);

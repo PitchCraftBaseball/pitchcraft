@@ -64,6 +64,8 @@ export default function GameScheduleTable() {
 
   const navigate = useNavigate();
 
+  // Fetch projected lineups for a game and open the pre-game report modal.
+  // By convention, players[0] is the pitcher and players[1-9] are the batters.
   const openReportPopup = async (row: ScheduleRow) => {
     setPreGameLoadingId(row.game_id);
     setPitchingTeam(row.home_team_id);
@@ -128,6 +130,7 @@ export default function GameScheduleTable() {
     const temp = [...players];
     temp[index] = player;
     setPlayers(temp);
+    // Track manual edits so we stop showing the autofill date banner for that side.
     if (player?.team_id === homeTeamId) {
       index === 0 ? setAwayLineupEdited(true) : setHomeLineupEdited(true);
     } else if (player?.team_id === awayTeamId) {
@@ -324,6 +327,7 @@ export default function GameScheduleTable() {
               </Stack>
             </Box>
           </Stack>
+            {/* Show an info banner when the lineup was autofilled from a past game, or a success banner when it's the official posted lineup. */}
             {!homeLineupEdited && battingTeam === homeTeamId && homeLineupDate && (
               <Alert severity="info" sx={{ mb: 1 }}>
                 {getTeam(battingTeam)?.name ?? "Home"} batting lineup autofilled from game on {dayjs(homeLineupDate).format("YYYY-MM-DD")}.

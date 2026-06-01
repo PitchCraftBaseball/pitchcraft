@@ -134,6 +134,8 @@ async function navigateToPGR(page: Page) {
     window.print = () => { (window as any).__printCallCount++; };
   });
   // Inject players into the history state before React Router initializes
+  // React Router v6 reads location state from history.state.usr on init, so we need to
+  // intercept replaceState (not pushState), since that's the call RR makes during its own setup.
   await page.addInitScript(({ players }) => {
     const orig = window.history.replaceState.bind(window.history);
     window.history.replaceState = function (
@@ -152,6 +154,8 @@ async function navigateToPGR(page: Page) {
 
 // Wait for all 9 batter sections to finish their initial model call
 async function waitForAllBattersLoaded(page: Page) {
+  // Check headings first to confirm all 9 PreGameBatter components have mounted,
+  // then wait for the loading spinners to clear so model calls have all resolved.
   for (const batter of PHILLIES_BATTERS_9) {
     await expect(
       page.getByRole("heading", { name: `${batter.use_first_name} ${batter.use_last_name}` })
@@ -225,7 +229,7 @@ test.describe("Pre-Game Report", () => {
       await route.fulfill({ json: MOCK_PREDICT_RESPONSE });
     });
 
-    // Change Batter 1 (Harper) to Edmundo Sosa — Sosa is not in the lineup
+    // Change Batter 1 (Harper) to Edmundo Sosa; Sosa is not in the initial lineup
     const batter1Input = page.getByRole("combobox", { name: "Batter 1" });
     await batter1Input.click();
     await batter1Input.fill("Sosa");
@@ -239,6 +243,7 @@ test.describe("Pre-Game Report", () => {
     const sosaCalls = newRequests.filter(
       (req) => req.batter === String(EXTRA_BATTER.id)
     );
+    // >= 1 rather than === 1 because React strict mode can fire effects twice in dev
     expect(sosaCalls.length).toBeGreaterThanOrEqual(1);
     const otherBatterCalls = newRequests.filter(
       (req) => req.batter !== String(EXTRA_BATTER.id)

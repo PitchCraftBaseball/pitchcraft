@@ -12,6 +12,7 @@ import { test, expect, type Page } from "@playwright/test";
 // Mock data
 // ---------------------------------------------------------------------------
 
+// The fields beyond team_id and position are required by the Player type but don't affect any test assertions.
 function p(
   id: number, first: string, last: string, pos: string, team: number
 ) {
@@ -77,6 +78,7 @@ const MOCK_SCHEDULE = [
 // openReportPopup sets: pitching=home(PHI), batting=away(LAD)
 //   players[0]  = data.home.pitcher  → Wheeler
 //   players[1..9] = data.away.batters → 9 LAD batters
+// fromDate: null means the lineup is the official posted one; a date string means it was autofilled from that past game.
 function makeLineup(awayFromDate: string | null, homeFromDate: string | null) {
   return {
     home: { fromDate: homeFromDate, pitcher: PHI_PITCHERS[0], batters: PHI_BATTERS },
@@ -252,7 +254,7 @@ test.describe("Pre-Game Report Pop-Up (official lineup)", () => {
     await batter1.fill("Ohtani");
     await page.getByRole("option", { name: "Shohei Ohtani" }).click();
 
-    // Open batter slot 2 — Ohtani should be disabled
+    // Open batter slot 2; Ohtani should be disabled
     const batter2 = page.getByRole("combobox", { name: "Select Batter 2" });
     await batter2.click();
     await batter2.fill("Ohtani");
@@ -264,7 +266,7 @@ test.describe("Pre-Game Report Pop-Up (official lineup)", () => {
   // Test 27: after swap, original pitching team pitcher absent from new pitcher dropdown
   test("POP_UP_WRONG_POSITION_SWAP", async ({ page }) => {
     await page.getByRole("button", { name: "Swap Teams" }).click();
-    // pitching is now LAD — Phillies pitcher Wheeler should not appear
+    // pitching is now LAD, Phillies pitcher Wheeler should not appear
     const input = page.getByRole("combobox", { name: "Select Pitcher" });
     await input.click();
     await input.fill("Wheeler");

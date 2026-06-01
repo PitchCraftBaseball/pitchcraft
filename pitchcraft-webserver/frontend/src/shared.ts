@@ -86,6 +86,7 @@ export type Colors = {
 export function getPitcherArsenal(playerId: string | number): string[] {
   const entry = (pitchArsenal as Record<string, ArsenalEntry>)[String(playerId)];
   if (!entry) return [];
+  // Prefer 2025 data, fall back to 2024 if not available yet.
   const year = entry["2025"] ?? entry["2024"];
   return year ? Object.keys(year.pitch_type) : [];
 }
