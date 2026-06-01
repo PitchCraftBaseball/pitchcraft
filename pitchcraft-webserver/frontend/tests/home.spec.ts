@@ -17,6 +17,6 @@ test.describe("Home screen", () => {
     await page.goto("/");
 
     await page.getByRole("button", { name: "User Guide" }).click();
-    await expect(page).toHaveURL(/\/guide/);
+    await expect(page.getByTestId("user-guide")).toBeVisible();
   });
 });
