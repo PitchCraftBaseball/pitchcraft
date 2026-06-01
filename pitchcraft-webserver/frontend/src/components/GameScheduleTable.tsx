@@ -9,7 +9,7 @@ import { alpha, Stack, Table, TableBody, TableCell, TableContainer, TableRow } f
 import { Box, Button, IconButton, Modal, Paper, Typography } from "@mui/material";
 import PlayerComboBox from "../components/PlayerComboBox";
 import { Player } from "../types";
-import { TEAMS } from "../shared";
+import { boxStyle, TEAMS } from "../shared";
 import CloseIcon from "@mui/icons-material/Close";
 import Alert from '@mui/material/Alert';
 import ChevronLeft from "@mui/icons-material/ChevronLeft";
@@ -28,20 +28,6 @@ type ScheduleRow = {
 };
 
 dayjs.extend(utc);
-
-const style = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: 800,
-  backdropFilter: "blur(8px)",
-  backgroundColor: (theme) => alpha(theme.palette.background.default, 0.6),
-  borderRadius: 4,
-  border: 1,
-  borderColor: "divider",
-  p: 2,
-};
 
 export default function GameScheduleTable() {
   const [gameDate, setGameDate] = useState<Dayjs | null>(dayjs());
@@ -232,7 +218,7 @@ export default function GameScheduleTable() {
 
       {(scheduleRows.length > 0) ? (
         <TableContainer component={Paper} sx={{ mt: 2 }}>
-          <Table size="small" padding="none" aria-label="schedule table">
+          <Table size="small" padding="none" aiia-label="schedule table">
             <TableBody>
               {scheduleRows.map(row => (
                 <TableRow key={row.game_id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
@@ -284,7 +270,7 @@ export default function GameScheduleTable() {
         open={open}
         onClose={closeReportPopup}
       >
-        <Box sx={style}>
+        <Box sx={boxStyle}>
           <IconButton
             aria-label="close pregame popup"
             onClick={(event) => closeReportPopup(event, "closeButtonClick")}
@@ -294,7 +280,7 @@ export default function GameScheduleTable() {
           <Stack direction="row" justifyContent="center" alignItems="center" sx={{ mb: 1 }}>
             <Box flex={1} display="flex" justifyContent="center">
               <Stack direction="column" alignItems="center">
-                <Box component="img" sx={{ height:"128px", width: "128px" }} src={"logos/" + getTeam(pitchingTeam)?.id + ".png"} onError={(e) => {
+                <Box component="img" sx={{ height:"128px", width: "128px", filter: "drop-shadow(0 0 16px rgba(255, 255, 255, 1))" }} src={"logos/" + getTeam(pitchingTeam)?.id + ".png"} onError={(e) => {
                   e.target.src = "crystal.png";
                 }}/>
                 <Stack direction="row" alignItems="center">
@@ -311,7 +297,7 @@ export default function GameScheduleTable() {
             </Button>
             <Box flex={1} display="flex" justifyContent="center">
               <Stack direction="column" alignItems="center">
-                <Box component="img" sx={{ height:"128px", width: "128px" }} src={"logos/" + getTeam(battingTeam)?.id + ".png"} onError={(e) => {
+                <Box component="img" sx={{ height:"128px", width: "128px", filter: "drop-shadow(0 0 16px rgba(255, 255, 255, 1))" }} src={"logos/" + getTeam(battingTeam)?.id + ".png"} onError={(e) => {
                   e.target.src = "crystal.png";
                 }}/>
                 <Stack direction="row" alignItems="center">

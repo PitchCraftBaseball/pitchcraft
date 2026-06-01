@@ -1,10 +1,13 @@
 import HelpOutlineOutlined from "@mui/icons-material/HelpOutlineOutlined";
-import { AppBar, Box, Container, CssBaseline, IconButton, Toolbar, Tooltip, Typography } from "@mui/material";
+import { AppBar, Box, Container, CssBaseline, IconButton, Modal, Toolbar, Tooltip, Typography } from "@mui/material";
 import { alpha } from "@mui/material";
-import { useNavigate } from "react-router";
+import { useState } from "react";
+import Guide from "./Guide";
+import { boxStyle } from "../shared";
+import CloseIcon from "@mui/icons-material/Close";
 
 export default function Navbar() {
-  const navigate = useNavigate();
+  const [openGuide, setOpenGuide] = useState(false);
 
   return (
     <AppBar position="sticky" elevation={0} sx={{
@@ -24,12 +27,23 @@ export default function Navbar() {
           </Box>
           <Box sx={{ flexGrow: 1 }} />
           <Tooltip title="User Guide" placement="left">
-            <IconButton onClick={() => navigate("/guide")} sx={{ color: "primary.contrastText" }} >
+            <IconButton onClick={() => setOpenGuide(true)} sx={{ color: "primary.contrastText" }} >
               <HelpOutlineOutlined />
             </IconButton>
           </Tooltip>
         </Toolbar>
         </Container>
+        <Modal open={openGuide}>
+          <Box sx={boxStyle}>
+            <IconButton
+              data-testid="close-user-guide"
+              onClick={() => setOpenGuide(false)}
+            >
+              <CloseIcon />
+            </IconButton>
+            <Guide />
+          </Box>
+        </Modal>
     </AppBar>
   );
 }
