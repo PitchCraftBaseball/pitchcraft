@@ -26,7 +26,7 @@ export default function Simulation() {
   const [batTeamId, setBatTeamId] = useState<TeamId>("");
   const [pitchTeamId, setPitchTeamId] = useState<TeamId>("");
 
-  // Player selection — full Player object so we have the name and id together
+  // Player selection; full Player object so we have the name and id together
   const [batter, setBatter] = useState<Player | null>(null);
   const [pitcher, setPitcher] = useState<Player | null>(null);
 
@@ -204,7 +204,7 @@ export default function Simulation() {
           </FormControl>
         </Stack>
 
-        {/* Player selectors — using PlayerComboBox */}
+        {/* Player selectors (using PlayerComboBox) */}
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <FormControl fullWidth size="small">
             <FormLabel sx={{ mb: 0.5 }}>Batter</FormLabel>

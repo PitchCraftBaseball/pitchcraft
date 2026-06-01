@@ -6,14 +6,23 @@ import ProbabilityPieChart from "./ProbabilityPieChart";
 
 interface PreGameBatterProps {
   pitcher: Player,
-  batter: Player
+  batter: Player,
+  outType: string,
 }
 
-function PreGameBatterLogic({ pitcher, batter, ...props }: PreGameBatterProps) {
+function PreGameBatterLogic({ pitcher, batter, outType, ...props }: PreGameBatterProps) {
   const model = new ModelGateway();
   const [loading, setLoading] = useState(true);
   const [modelOutput, setModelOutput] = useState<PredictResponse | undefined>();
   const [error, setError] = useState("");
+
+  // Maps UI option strings to the model's preferred_out_type param; null means let the model decide.
+  const OUT_TYPE_MAP: Record<string, string | null> = {
+    default: null,
+    ground: "groundout",
+    fly: "flyout",
+    strike: "strikeout",
+  };
 
   function buildBody() {
     return {
@@ -34,6 +43,7 @@ function PreGameBatterLogic({ pitcher, batter, ...props }: PreGameBatterProps) {
       on1b: 0,
       on2b: 0,
       on3b: 0,
+      preferredOutType: OUT_TYPE_MAP[outType] ?? null,
     };
   }
   
@@ -55,9 +65,10 @@ function PreGameBatterLogic({ pitcher, batter, ...props }: PreGameBatterProps) {
     setLoading(false);
   }
 
+  // Re-run the prediction whenever the matchup or preferred out type changes.
   useEffect(() => {
     run();
-  }, [pitcher, batter]);
+  }, [pitcher, batter, outType]);
 
   let output;
   if (loading) {
@@ -79,9 +90,14 @@ function PreGameBatterLogic({ pitcher, batter, ...props }: PreGameBatterProps) {
     </Stack>
   }
 
+  const outcomeLabel = modelOutput
+    ? modelOutput.outcome.charAt(0).toUpperCase() + modelOutput.outcome.slice(1)
+    : null;
+
   return <Box {...props} sx={{ "@media print": { display: "block", breakInside: "avoid" }}}>
     <Typography variant="h5">
       {batter.use_first_name} {batter.use_last_name}
+      {outcomeLabel && ` - ${outcomeLabel}`}
     </Typography>
     {output}
     {error && <Typography>error</Typography>}

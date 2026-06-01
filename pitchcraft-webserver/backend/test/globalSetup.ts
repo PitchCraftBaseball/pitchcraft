@@ -2,6 +2,7 @@
 // Uses postgres testcontainers, runs a migration, seeds data, starts test environment express, tests
 
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from "@testcontainers/postgresql";
+import { GenericContainer, StartedTestContainer } from "testcontainers";
 import { execSync } from "child_process";
 import { ChildProcess, spawn } from "child_process";
 import path from "path";
@@ -11,6 +12,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BACKEND_ROOT = path.resolve(__dirname, "..");
 
 let pgContainer: StartedPostgreSqlContainer;
+let nginxContainer: StartedTestContainer;
 let serverProcess: ChildProcess;
 
 async function seed(connectionUri: string) {
@@ -44,7 +46,9 @@ async function seed(connectionUri: string) {
     ON CONFLICT (game_id) DO NOTHING;
   `;
 
-  execSync(`psql "${connectionUri}" -c "${sql.replace(/"/g, '\\"')}"`, {
+  // Pipe SQL via stdin to avoid shell-escaping issues with multiline strings on Windows
+  execSync(`psql "${connectionUri}"`, {
+    input: sql,
     stdio: "pipe",
   });
 }
@@ -106,6 +110,7 @@ export async function setup() {
       PORT: String(TEST_PORT),
     },
     stdio: "pipe",
+    shell: true,
   });
 
   serverProcess.stdout?.on("data", (d) =>
@@ -117,11 +122,54 @@ export async function setup() {
 
   await waitForServer(`${serverUrl}/api/health`);
   console.log("[globalSetup] Server ready.");
+
+  const nginxConf = `server {
+  listen 80;
+  server_name _;
+  root /usr/share/nginx/html;
+  index index.html;
+  location /api/ {
+    proxy_pass http://host.docker.internal:${TEST_PORT};
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+  location / {
+    try_files $uri /index.html;
+  }
+}`;
+
+  console.log("[globalSetup] Starting nginx testcontainer...");
+  nginxContainer = await new GenericContainer("nginx:1.27-alpine")
+    .withExposedPorts(80)
+    .withCopyContentToContainer([
+      { content: nginxConf, target: "/etc/nginx/conf.d/default.conf" },
+      {
+        content: "<!DOCTYPE html><html><head><title>PitchCraft</title></head><body></body></html>",
+        target: "/usr/share/nginx/html/index.html",
+      },
+    ])
+    .withExtraHosts([{ host: "host.docker.internal", ipAddress: "host-gateway" }])
+    .start();
+
+  const nginxPort = nginxContainer.getMappedPort(80);
+  process.env.NGINX_TEST_URL = `http://127.0.0.1:${nginxPort}`;
+  console.log(`[globalSetup] nginx ready on :${nginxPort}.`);
 }
 
 export async function teardown() {
   console.log("[globalSetup] Tearing down...");
-  serverProcess?.kill("SIGTERM");
+  if (serverProcess?.pid) {
+    // shell:true on Windows spawns a cmd.exe tree; taskkill /T is needed to kill the whole tree
+    if (process.platform === "win32") {
+      try {
+        execSync(`taskkill /F /T /PID ${serverProcess.pid}`, { stdio: "pipe" });
+      } catch { /* already gone */ }
+    } else {
+      serverProcess.kill("SIGTERM");
+    }
+  }
+  await nginxContainer?.stop();
   await pgContainer?.stop();
   console.log("[globalSetup] Done.");
 }

@@ -46,6 +46,8 @@ playersRouter.get("/", async (_req, res) => {
   }
 });
 
+// Looks back 7 days of games and grabs a batting order from the most recent one.
+// Prefers a game where the opposing pitcher's hand matches the projected opponent's, so the lineup is more realistic.
 async function getFallbackLineup(teamId: number, oppPitchHand: 'R' | 'L' | 'S' | undefined): Promise<FallbackResponse> {
   try {
     const endDate = new Date();
@@ -98,6 +100,7 @@ async function getFallbackLineup(teamId: number, oppPitchHand: 'R' | 'L' | 'S' |
       } else {
         const oppPitcherHand = gameData?.gameData?.probablePitchers?.[isHome ? 'away' : 'home']?.pitchHand?.code;
 
+        // Skip this game if the opposing pitcher's hand doesn't match what we're looking for.
         if (oppPitcherHand && oppPitcherHand !== oppPitchHand) {
           continue;
         }
@@ -194,6 +197,7 @@ async function getProjectedLineup(req: Request, res: Response) {
       awayPreviousDate = date;
     }
 
+    // Deduplicate before hitting the DB; pitchers can show up on both probable pitcher lists.
     const combinedIds = [...new Set([...homeBatterIds, ...awayBatterIds, homePitcherId, awayPitcherId])];
 
     const dbPlayers = await prisma.player.findMany({

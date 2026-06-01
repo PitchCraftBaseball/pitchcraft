@@ -6,7 +6,7 @@ export default defineConfig({
     include: ["test/**/*.test.ts"],
     globalSetup: ["test/globalSetup.ts"],
     testTimeout: 30_000,
-    hookTimeout: 60_000,
+    hookTimeout: 120_000,
     sequence: {
       concurrent: false,
     },
