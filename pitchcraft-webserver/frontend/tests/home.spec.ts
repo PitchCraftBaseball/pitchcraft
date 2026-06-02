@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Home screen", () => {
   test.beforeEach(async ({ page }) => {
+    await page.route("**/api/schedule/date*", (r) => r.fulfill({ json: [] }));
     await page.goto("/");
   });
 
@@ -17,6 +18,6 @@ test.describe("Home screen", () => {
     await page.goto("/");
 
     await page.getByRole("button", { name: "User Guide" }).click();
-    await expect(page.getByTestId("user-guide")).toBeVisible();
+    await expect(page).toHaveURL(/\/guide/);
   });
 });
