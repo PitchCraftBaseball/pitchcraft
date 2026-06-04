@@ -75,7 +75,7 @@ export default function Simulation() {
   function buildBody() {
     return {
       year: "2025", 
-      strategy: "argmax",
+      strategy: "optimal_out",
       pitcher: String(pitcher?.id ?? ""),
       pitcherFeatures: ["p_throws"],
       batter: String(batter?.id ?? ""),

@@ -27,7 +27,7 @@ function PreGameBatterLogic({ pitcher, batter, outType, ...props }: PreGameBatte
   function buildBody() {
     return {
       year: "2025",
-      strategy: "argmax",
+      strategy: outType === "default" ? "argmax" : "preferred",
       pitcher: String(pitcher?.id ?? ""),
       pitcherFeatures: ["p_throws"],
       batter: String(batter?.id ?? ""),
