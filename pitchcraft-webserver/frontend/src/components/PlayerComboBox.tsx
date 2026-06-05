@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Autocomplete, TextField } from "@mui/material";
+import { Autocomplete, styled, TextField } from "@mui/material";
 import type { Player } from "../types";
 
 // Fetches batters or pitchers for a given teamId.
@@ -23,9 +23,10 @@ interface PlayerComboBoxProps {
   value: Player | null;
   onChange: (player: Player | null) => void;
   alreadySelected: Set<number>;
+  label: string;
 }
 
-export default function PlayerComboBox({ teamId, batters, value, onChange, alreadySelected }: PlayerComboBoxProps) {
+function PlayerComboBoxLogic({ teamId, batters, value, onChange, alreadySelected, label, ...props }: PlayerComboBoxProps) {
   const [players, setPlayers] = useState<Player[]>([]);
 
   useEffect(() => {
@@ -33,6 +34,7 @@ export default function PlayerComboBox({ teamId, batters, value, onChange, alrea
 
     if (!teamId) return;
 
+    // Prevents a stale fetch from an old teamId from overwriting a newer result.
     let cancelled = false;
 
     fetchPlayers(teamId, batters).then((result) => {
@@ -60,11 +62,15 @@ export default function PlayerComboBox({ teamId, batters, value, onChange, alrea
       renderInput={(params) => (
         <TextField
           {...params}
-          label={batters ? "Select Batter" : "Select Pitcher"}
-          variant="standard"
+          label={label}
+          variant="outlined"
           placeholder={teamId ? "Search…" : "Select a team first…"}
         />
       )}
+      {...props}
     />
   );
 }
+
+const PlayerComboBox = styled(PlayerComboBoxLogic)``;
+export default PlayerComboBox;

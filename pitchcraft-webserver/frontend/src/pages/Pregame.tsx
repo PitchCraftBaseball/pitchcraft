@@ -1,18 +1,25 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router";
 import {
+    Button,
+    Chip,
+    Container,
     Divider,
   FormControl,
-  FormLabel,
   Grid,
   MenuItem,
   Paper,
   Select,
+  Stack,
   Typography,
 } from "@mui/material";
 import PlayerComboBox from "../components/PlayerComboBox";
 import { Player } from "../types";
 import PreGameBatter from "../components/PreGameBatter";
+import pitchArsenal from "../data/pitch_arsenal.json";
+import pitchColors from "../data/pitch_colors.json";
+import { ArsenalEntry, Colors, formatPitchType } from "../shared";
+import { Print } from "@mui/icons-material";
 
 type OutType = "default" | "ground" | "fly" | "strike";
 
@@ -43,6 +50,7 @@ export default function Pregame() {
     setOutTypes(temp);
   }
 
+  // Redirect to home if someone navigates directly to /pregame without state.
   useEffect(() => {
     if (!state || !("players" in state)) {
       navigate("/");
@@ -56,43 +64,86 @@ export default function Pregame() {
     return;
   }
 
+  // Convention: players[0] is the pitcher, players[1-9] are the batters.
   let pitchingTeam = players[0].team_id;
   let battingTeam = players[1].team_id;
 
   const reports = [];
   const batters = [];
   for (let i = 1; i < players.length; i++) {
-    reports.push(<PreGameBatter pitcher={players[0]} batter={players[i]} key={"report" + i} />);
+    reports.push(<PreGameBatter sx={{ mt: 1 }} pitcher={players[0]} batter={players[i]} outType={outTypes[i-1]} key={"report" + i} />);
     batters.push(
       <div key={"batterDiv" + i}>
         <PlayerComboBox
+          sx={{
+            mt: 2,
+            "& .MuiOutlinedInput-notchedOutline": {
+              borderBottomLeftRadius: "0px",
+              borderBottomRightRadius: "0px"
+            }
+          }}
           value={players[i]}
           teamId={battingTeam}
           batters={true}
           alreadySelected={selectedPlayers}
+          label={"Batter " + i}
           onChange={(newValue) => { updatePlayer(i, newValue!) }}
           key={"batter" + i}
         />
-          <FormControl fullWidth size="small" sx={{ flex: 1 }}>
-            <Select value={outTypes[i-1]} onChange={(e) => updateOutTypes(i-1, e.target.value)}>
-              <MenuItem value="default">Default</MenuItem>
-              <MenuItem value="ground">Groundout</MenuItem>
-              <MenuItem value="fly">Flyout</MenuItem>
-              <MenuItem value="strike">Strikeout</MenuItem>
-            </Select>
-          </FormControl>
+        <FormControl fullWidth size="small" sx={{ flex: 1 }}>
+          <Select
+            sx={{
+              mt: "-1px",
+              "& .MuiOutlinedInput-notchedOutline": {
+                borderTopLeftRadius: "0px",
+                borderTopRightRadius: "0px"
+              },
+            }}
+            value={outTypes[i-1]}
+            onChange={(e) => updateOutTypes(i-1, e.target.value)}
+            inputProps={{ "data-testid": "pgr-out-type-" + (i-1) }}
+          >
+            <MenuItem value="default">Automatic Out Type</MenuItem>
+            <MenuItem value="ground">Groundout</MenuItem>
+            <MenuItem value="fly">Flyout</MenuItem>
+            <MenuItem value="strike">Strikeout</MenuItem>
+          </Select>
+        </FormControl>
         </div>
     );
   }
+  console.log(players);
 
-  return <Paper sx={{ p: 2 }}>
+  let arsenal = [];
+  let pitcherProfileError;
+  const entry = (pitchArsenal as Record<string, ArsenalEntry>)[players[0].id];
+  // Use 2025 data if available, otherwise fall back to 2024.
+  const year = entry["2025"] ?? entry["2024"];
+  if (year) {
+    const keys = Object.keys(year.pitch_type_percentage);
+    for (let i = 0; i < keys.length; i++) {
+      const color = (pitchColors as Colors)[keys[i]].color;
+      arsenal.push(
+        <Stack direction="column" spacing={1} key={"pitcherArsenalStack" + i}>
+          <Chip size="small" sx={{ bgcolor: color, color: color, userSelect: "none", displayPrint: "none" }} />
+          <Typography align="center">
+            {formatPitchType(keys[i]) + ": " + (year.pitch_type_percentage[keys[i]] * 100).toFixed(2) + "%"}
+          </Typography>
+        </Stack>);
+    }
+  } else {
+    pitcherProfileError = <Typography>Could not load pitcher profile.</Typography>;
+  }
+
+  return <Container>
     <Grid container spacing={2}>
-      <Grid size={3}>
+      <Grid size={3} sx={{ displayPrint: "none" }}>
+        <Button variant="contained" startIcon={<Print />} onClick={() => window.print()} sx={{ mb: 1, p: 2, width: "100%" }}>Print Report</Button>
         <Typography variant="h5">
           Roster
         </Typography>
         <Divider />
-        <Typography>
+        <Typography sx={{ my: 1 }}>
           Pitcher
         </Typography>
         <PlayerComboBox
@@ -100,10 +151,10 @@ export default function Pregame() {
           teamId={pitchingTeam}
           batters={false}
           alreadySelected={selectedPlayers}
+          label={"Pitcher"}
           onChange={(newValue) => { updatePlayer(0, newValue!) }}
         />
-        <Divider />
-        <Typography>
+        <Typography sx={{ my: 1 }}>
           Batters
         </Typography>
         {batters}
@@ -111,14 +162,15 @@ export default function Pregame() {
       <Grid size="grow">
         <Paper sx={{ p: 2 }}>
           <Typography variant="h5">
-            Pitcher Profile
+            {players[0].use_first_name} {players[0].use_last_name} Profile
           </Typography>
-          <Typography>
-            TODO
-          </Typography>
+          {pitcherProfileError}
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            {arsenal}
+          </Stack>
         </Paper>
         {reports}
       </Grid>
     </Grid>
-  </Paper>
+  </Container>
 }

@@ -1,7 +1,8 @@
 import { PieChart } from "@mui/x-charts";
 import { PieSlice, PitchProbMap } from "../types";
-import { formatPitchType } from "../shared";
-import { Paper, Typography } from "@mui/material";
+import { Colors, formatPitchType } from "../shared";
+import { Paper, styled, Typography } from "@mui/material";
+import pitchColors from "../data/pitch_colors.json";
 
 
 function buildPieData(probabilities: PitchProbMap): PieSlice[] {
@@ -15,6 +16,7 @@ function buildPieData(probabilities: PitchProbMap): PieSlice[] {
         id: code,
         label: formatPitchType(code),
         value,
+        color: (pitchColors as Colors)[code].color
       }));
     }
 
@@ -23,12 +25,14 @@ function buildPieData(probabilities: PitchProbMap): PieSlice[] {
     const rest = positive.slice(4);
     const otherValue = rest.reduce((sum, [, p]) => sum + p, 0);
 
+
     const slices: PieSlice[] = top4.map(([code, value]) => ({
       id: code,
-      label: formatPitchType(code),
+      label: (location) => location === "legend" ? code : formatPitchType(code),
       value,
+      color: (pitchColors as Colors)[code].color
     }));
-    slices.push({ id: "__other__", label: "Other", value: otherValue });
+    slices.push({ id: "__other__", label: "Other", value: otherValue, color: "gray" });
     return slices;
 }
 
@@ -45,23 +49,45 @@ interface ProbabilityPieChartProps {
   data?: PieData
 }
 
-export default function ProbabilityPieChart({ size, data }: ProbabilityPieChartProps) {
+function ProbabilityPieChartLogic({ size, data, ...props }: ProbabilityPieChartProps) {
   if (!data) {
     return;
   }
 
-  return <Paper variant="outlined" sx={{ p: 2, width: "100%" }}>
+  const pieSlices = buildPieData(data.data);
+  console.log(pieSlices);
+  const printReport = [];
+  for (let i = 0; i < pieSlices.length; i++) {
+    printReport.push(
+      <Typography key={"printReport" + i} sx={{ display: "none", displayPrint: "block" }}>
+        {pieSlices[i].id == "__other__" ? "Other" : formatPitchType(pieSlices[i].id)}: {(pieSlices[i].value * 100).toFixed(2)}%
+      </Typography>
+    );
+  }
+
+  return <Paper sx={{ p: 2, width: "100%" }} {...props}>
     <Typography variant="subtitle1" sx={{ mb: 1 }}>
-      Pitch {data.pitchIndex}: {formatPitchType(data.pitchType)} (Count: {data.ballsAfter}-{data.strikesAfter})
+      Pitch {data.pitchIndex}: {formatPitchType(data.pitchType)}<br />Count: {data.ballsAfter}-{data.strikesAfter}
     </Typography>
     <PieChart
+      sx={{ displayPrint: "none" }}
       height={size}
-      series = {[
+      series={[
         {
-          data: buildPieData(data.data),
+          data: pieSlices,
           valueFormatter: (item) => `${(item.value * 100).toFixed(1)}%`,
         },
       ]}
+      slotProps={{
+        legend: {
+          direction: "horizontal",
+          position: { vertical: "bottom", horizontal: "center" }
+        }
+      }}
     />
+    {printReport}
   </Paper>;
 }
+
+const ProbabilityPieChart = styled(ProbabilityPieChartLogic)``;
+export default ProbabilityPieChart;

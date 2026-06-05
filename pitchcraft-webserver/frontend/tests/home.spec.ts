@@ -17,6 +17,7 @@ async function selectDate(page: Page, month: string, day: string, year: string) 
 
 test.describe("Home screen", () => {
   test.beforeEach(async ({ page }) => {
+    await page.route("**/api/schedule/date*", (r) => r.fulfill({ json: [] }));
     await page.goto("/");
   });
 
@@ -29,10 +30,14 @@ test.describe("Home screen", () => {
     await expect(page.getByRole("table", { name: "schedule table" })).toBeVisible();
   });
 
-  test("Navigate to User Guide", async ({ page }) => {
-    await page.getByRole("button", { name: "User Guide" }).click();
-    await expect(page).toHaveURL(/\/guide/);
+  test("navigation buttons route to the correct pages", async ({ page }) => {
+    await page.getByRole("button", { name: "Simulate Matchup" }).click();
+    await expect(page).toHaveURL(/\/simulation/);
+
     await page.goto("/");
+
+    await page.getByRole("button", { name: "User Guide" }).click();
+    await expect(page.getByTestId("user-guide")).toBeVisible();
   });
 
   test("Navigate to Simulation Screen", async ({ page }) => {

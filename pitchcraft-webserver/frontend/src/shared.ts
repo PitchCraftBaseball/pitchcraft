@@ -1,4 +1,7 @@
 // shared.ts
+import { alpha } from "@mui/material";
+import pitchArsenal from "./data/pitch_arsenal.json";
+
 export type Team = { id: number; name: string };
 
 // MLB Stats API team ids (sportId=1)
@@ -75,13 +78,33 @@ export function formatPitchType(code: string): string {
 }
 
 export const INNING_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-import pitchArsenal from "./data/pitch_arsenal.json";
 
-type ArsenalEntry = { "2024"?: { pitch_type: Record<string, number> }; "2025"?: { pitch_type: Record<string, number> } };
+export type ArsenalEntry = { "2024"?: { pitch_type: Record<string, number>, pitch_type_percentage: Record<string, number> }; "2025"?: { pitch_type: Record<string, number>, pitch_type_percentage: Record<string, number> } };
+
+export type Colors = {
+  [Key: string]: { color: string, name: string }
+}
 
 export function getPitcherArsenal(playerId: string | number): string[] {
   const entry = (pitchArsenal as Record<string, ArsenalEntry>)[String(playerId)];
   if (!entry) return [];
+  // Prefer 2025 data, fall back to 2024 if not available yet.
   const year = entry["2025"] ?? entry["2024"];
   return year ? Object.keys(year.pitch_type) : [];
 }
+
+export const boxStyle = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  maxHeight: "75%",
+  overflowY: "auto",
+  transform: "translate(-50%, -50%)",
+  width: 800,
+  backdropFilter: "blur(8px)",
+  backgroundColor: (theme) => alpha(theme.palette.background.default, 0.6),
+  borderRadius: 4,
+  border: 1,
+  borderColor: "divider",
+  p: 2,
+};

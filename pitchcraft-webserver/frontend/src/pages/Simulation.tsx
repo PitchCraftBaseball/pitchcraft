@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { type Player, type PitchProbMap, type PieSlice, PredictResponse } from "../types";
+import { type Player, PredictResponse } from "../types";
 import { TEAMS, PITCH_TYPES, INNING_OPTIONS, formatPitchType, getPitcherArsenal } from "../shared";
 import {
   Button,
   FormControl,
   FormLabel,
-  Grid,
   MenuItem,
-  Paper,
   Select,
   Stack,
   TextField,
@@ -15,6 +13,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Box,
+  Container,
 } from "@mui/material";
 import PlayerComboBox from "../components/PlayerComboBox";
 import ModelGateway from "../modelGateway";
@@ -22,20 +21,12 @@ import ProbabilityPieChart from "../components/ProbabilityPieChart";
 
 type TeamId = number | "";
 
-type ChartEntry = {
-  pitchIndex: number;
-  pitchType: string;
-  ballsAfter: number;
-  strikesAfter: number;
-  data: PieSlice[];
-};
-
 export default function Simulation() {
   // Team selection
   const [batTeamId, setBatTeamId] = useState<TeamId>("");
   const [pitchTeamId, setPitchTeamId] = useState<TeamId>("");
 
-  // Player selection — full Player object so we have the name and id together
+  // Player selection; full Player object so we have the name and id together
   const [batter, setBatter] = useState<Player | null>(null);
   const [pitcher, setPitcher] = useState<Player | null>(null);
 
@@ -48,10 +39,9 @@ export default function Simulation() {
   const [inning, setInning] = useState(1);
   const [batScore, setBatScore] = useState("0");
   const [pitchScore, setPitchScore] = useState("0");
-  const [prevPitchType, setPrevPitchType] = useState("FF");
+  const [prevPitchType, setPrevPitchType] = useState("START");
 
   // Output
-  const [respText, setRespText] = useState("");
   const [modelOutput, setModelOutput] = useState<PredictResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
@@ -75,25 +65,17 @@ export default function Simulation() {
     return arsenal.length > 0 ? arsenal : PITCH_TYPES as unknown as string[];
   }, [pitcher]);
 
-  const batterLabel = useMemo(() => {
-    return batter ? `${batter.use_first_name} ${batter.use_last_name}` : "";
-  }, [batter]);
-
-  const pitcherLabel = useMemo(() => {
-    return pitcher ? `${pitcher.use_first_name} ${pitcher.use_last_name}` : "";
-  }, [pitcher]);
-
   // Reset prev pitch type if selected pitcher doesn't throw it
   useEffect(() => {
-    if (!availablePitchTypes.includes(prevPitchType)) {
-      setPrevPitchType(availablePitchTypes[0]);
+    if (prevPitchType !== "START" && !availablePitchTypes.includes(prevPitchType)) {
+      setPrevPitchType("START");
     }
   }, [availablePitchTypes]);
 
   function buildBody() {
     return {
       year: "2025", 
-      strategy: "argmax",
+      strategy: "optimal_out",
       pitcher: String(pitcher?.id ?? ""),
       pitcherFeatures: ["p_throws"],
       batter: String(batter?.id ?? ""),
@@ -117,11 +99,13 @@ export default function Simulation() {
     value,
     options,
     onChange,
+    testId,
   }: {
     label: string;
     value: number;
     options: number[];
     onChange: (v: number) => void;
+    testId?: string;
   }) {
     return (
       <FormControl fullWidth size="small">
@@ -132,6 +116,7 @@ export default function Simulation() {
           value={value}
           onChange={(_, v) => v !== null && onChange(v)}
           size="small"
+          data-testid={testId}
         >
           {options.map((n) => (
             <ToggleButton key={n} value={n}>
@@ -146,7 +131,6 @@ export default function Simulation() {
   async function run(): Promise<void> {
     setErr("");
     setModelOutput(null);
-    setRespText("");
 
     setLoading(true);
     const response = await model.run(buildBody());
@@ -156,15 +140,14 @@ export default function Simulation() {
       setModelOutput(payload);
     }
 
-    setRespText(response.text);
     setLoading(false);
   }
 
   const charts = [];
   if (modelOutput) {
-    for (let i = 0; i < Math.min(modelOutput.sequence.length, 4); i++) {
+    for (let i = 0; i < modelOutput.sequence.length; i++) {
       const step = modelOutput.sequence[i];
-      charts.push(<ProbabilityPieChart size={260} data={{
+      charts.push(<ProbabilityPieChart size={256} sx={{ minWidth: "400px" }} data={{
         pitchIndex: step.pitch_index,
         pitchType: step.pitch_type,
         ballsAfter: step.balls_after,
@@ -175,8 +158,8 @@ export default function Simulation() {
   }
 
   return (
-    <Paper sx={{ p: 2 }}>
-      <Typography variant="h5" sx={{ mb: 2 }}>
+    <Container sx={{ mt: 2 }}>
+      <Typography variant="h4" sx={{ mb: 2 }} align="center">
         Model Simulation
       </Typography>
 
@@ -193,6 +176,7 @@ export default function Simulation() {
                 handleBatTeamChange(v === "" ? "" : Number(v));
               }}
               displayEmpty
+              inputProps={{ "data-testid": "bat-team-select" }}
             >
               <MenuItem value=""><em>Select…</em></MenuItem>
               {TEAMS.map((t) => (
@@ -210,6 +194,7 @@ export default function Simulation() {
                 handlePitchTeamChange(v === "" ? "" : Number(v));
               }}
               displayEmpty
+              inputProps={{ "data-testid": "pitch-team-select" }}
             >
               <MenuItem value=""><em>Select…</em></MenuItem>
               {TEAMS.map((t) => (
@@ -219,7 +204,7 @@ export default function Simulation() {
           </FormControl>
         </Stack>
 
-        {/* Player selectors — using PlayerComboBox */}
+        {/* Player selectors (using PlayerComboBox) */}
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <FormControl fullWidth size="small">
             <FormLabel sx={{ mb: 0.5 }}>Batter</FormLabel>
@@ -229,6 +214,7 @@ export default function Simulation() {
               value={batter}
               alreadySelected={new Set()}
               onChange={setBatter}
+              label={"Select Batter"}
             />
           </FormControl>
 
@@ -240,22 +226,23 @@ export default function Simulation() {
               value={pitcher}
               alreadySelected={new Set()}
               onChange={setPitcher}
+              label={"Select Pitcher"}
             />
           </FormControl>
         </Stack>
 
         {/* Count / outs */}
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-          <NumToggle label="Balls"   value={balls}   options={[0, 1, 2, 3]} onChange={setBalls} />
-          <NumToggle label="Strikes" value={strikes} options={[0, 1, 2]}    onChange={setStrikes} />
-          <NumToggle label="Outs"    value={outs}    options={[0, 1, 2]}    onChange={setOuts} />
+          <NumToggle label="Balls"   value={balls}   options={[0, 1, 2, 3]} onChange={setBalls}   testId="balls-toggle" />
+          <NumToggle label="Strikes" value={strikes} options={[0, 1, 2]}    onChange={setStrikes} testId="strikes-toggle" />
+          <NumToggle label="Outs"    value={outs}    options={[0, 1, 2]}    onChange={setOuts}    testId="outs-toggle" />
         </Stack>
 
         {/* Runners / inning */}
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems="stretch">
           <FormControl size="small" sx={{ flex: 1 }}>
             <FormLabel sx={{ mb: 0.5 }}>Runners on</FormLabel>
-            <ToggleButtonGroup value={runnersOn} onChange={(_, v) => setRunnersOn(v)} size="small">
+            <ToggleButtonGroup value={runnersOn} onChange={(_, v) => setRunnersOn(v)} size="small" data-testid="runners-toggle">
               <ToggleButton value="1B" sx={{ flex: 1 }}>1B</ToggleButton>
               <ToggleButton value="2B" sx={{ flex: 1 }}>2B</ToggleButton>
               <ToggleButton value="3B" sx={{ flex: 1 }}>3B</ToggleButton>
@@ -264,7 +251,7 @@ export default function Simulation() {
 
           <FormControl fullWidth size="small" sx={{ flex: 1 }}>
             <FormLabel sx={{ mb: 0.5 }}>Inning half</FormLabel>
-            <Select value={inningHalf} onChange={(e) => setInningHalf(e.target.value as "top" | "bottom")}>
+            <Select value={inningHalf} onChange={(e) => setInningHalf(e.target.value as "top" | "bottom")} inputProps={{ "data-testid": "inning-half-select" }}>
               <MenuItem value="top">Top</MenuItem>
               <MenuItem value="bottom">Bottom</MenuItem>
             </Select>
@@ -272,7 +259,7 @@ export default function Simulation() {
 
           <FormControl fullWidth size="small" sx={{ flex: 1 }}>
             <FormLabel sx={{ mb: 0.5 }}>Inning</FormLabel>
-            <Select value={inning} onChange={(e) => setInning(Number(e.target.value))}>
+            <Select value={inning} onChange={(e) => setInning(Number(e.target.value))} inputProps={{ "data-testid": "inning-select" }}>
               {INNING_OPTIONS.map((n) => (
                 <MenuItem key={n} value={n}>{n === 10 ? "10+" : n}</MenuItem>
               ))}
@@ -294,7 +281,7 @@ export default function Simulation() {
                 if (v === "" || /^\d+$/.test(v)) setBatScore(v);
               }}
               onBlur={() => setBatScore(String(Math.max(0, parseInt(batScore) || 0)))}
-              inputProps={{ min: 0 }}
+              inputProps={{ min: 0, "data-testid": "bat-score-input" }}
             />
           </FormControl>
 
@@ -310,13 +297,18 @@ export default function Simulation() {
                 if (v === "" || /^\d+$/.test(v)) setPitchScore(v);
               }}
               onBlur={() => setPitchScore(String(Math.max(0, parseInt(pitchScore) || 0)))}
-              inputProps={{ min: 0 }}
+              inputProps={{ min: 0, "data-testid": "pitch-score-input" }}
             />
           </FormControl>
 
           <FormControl fullWidth size="small">
             <FormLabel sx={{ mb: 0.5 }}>Previous pitch type</FormLabel>
-            <Select value={prevPitchType} onChange={(e) => setPrevPitchType(String(e.target.value))}>
+            <Select
+              value={prevPitchType}
+              onChange={(e) => setPrevPitchType(String(e.target.value))}
+              inputProps={{ "data-testid": "prev-pitch-select" }}
+            >
+              <MenuItem value="START">First Pitch</MenuItem>
               {availablePitchTypes.map((pt) => (
                 <MenuItem key={pt} value={pt}>{formatPitchType(pt)}</MenuItem>
               ))}
@@ -329,7 +321,8 @@ export default function Simulation() {
           size="large"
           fullWidth
           onClick={run}
-          disabled={loading || !batter || !pitcher}
+          disabled={loading || !batTeamId || !pitchTeamId || !batter || !pitcher}
+          data-testid="get-pitch-sequence-btn"
         >
           {loading ? "Sending..." : "Get Pitch Sequence"}
         </Button>
@@ -338,27 +331,12 @@ export default function Simulation() {
 
         {charts.length > 0 && (
           <Box sx={{ my: 1 }}>
-            <Grid container columnSpacing={2} rowSpacing={2} alignItems="stretch">
+            <Stack direction="row" sx={{ overflowX: "auto" }} spacing = {1}>
               {charts}
-            </Grid>
+            </Stack>
           </Box>
         )}
-
-        <Box sx={{ mt: 1 }}>
-          <TextField
-            label="Response"
-            value={respText}
-            minRows={6}
-            fullWidth
-            multiline
-          />
-        </Box>
-
-        <Typography variant="body2" color="text.secondary">
-          <b>Selected:</b> batter={batterLabel} pitcher={pitcherLabel}
-        </Typography>
-
       </Stack>
-    </Paper>
+    </Container>
   );
 }
