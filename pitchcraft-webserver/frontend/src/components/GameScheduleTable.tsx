@@ -222,7 +222,7 @@ export default function GameScheduleTable() {
 
       {(scheduleRows.length > 0) ? (
         <TableContainer component={Paper} sx={{ mt: 2 }}>
-          <Table size="small" padding="none" aiia-label="schedule table">
+          <Table size="small" padding="none" aria-label="schedule table">
             <TableBody>
               {scheduleRows.map(row => (
                 <TableRow key={row.game_id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
