@@ -130,9 +130,11 @@ test.describe("Home screen", () => {
     await page.goto("/");
   });
 
-  test("Exit User Guide", async ({ page }) => {
-    await page.goto("/guide");
-    await page.getByRole("link", { name: "PitchCraft" }).click();
+  test("Show User Guide", async ({ page }) => {
+    await page.getByRole("button", { name: "User Guide" }).click();
+    await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
+
+    await page.getByTestId('close-user-guide').click();    
     await expect(page.getByRole("heading", { name: "Schedule" })).toBeVisible();
   });
 
