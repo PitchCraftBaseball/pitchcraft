@@ -2,6 +2,61 @@ import { test, expect } from "@playwright/test";
 
 import { Page } from '@playwright/test';
 
+
+const NYY_ID = 147; // New York Yankees
+const BOS_ID = 111; // Boston Red Sox
+const PHI_ID = 143; // Philadelphia Phillies
+const LAD_ID = 119; // Los Angeles Dodgers
+
+const MOCK_GAMES: Record<string, object[]> = {
+  "2026-06-05": [
+    {
+      game_id: "747001",
+      game_datetime: "2026-06-05T17:05:00Z",
+      away_team: "New York Yankees",
+      away_team_id: NYY_ID,
+      home_team: "Boston Red Sox",
+      home_team_id: BOS_ID,
+      venue_id: 3,
+      venue_name: "Fenway Park",
+      },
+      {
+        game_id: "777001",
+        game_datetime: "2026-05-28T17:05:00Z",
+        away_team: "Los Angeles Dodgers",
+        away_team_id: LAD_ID,
+        home_team: "Philadelphia Phillies",
+        home_team_id: PHI_ID,
+        venue_id: 2681,
+        venue_name: "Citizens Bank Park",
+      },
+  ],
+  "2026-06-10": [
+    {
+      game_id: "747002",
+      game_datetime: "2026-06-10T17:10:00Z",
+      away_team: "New York Yankees",
+      away_team_id: NYY_ID,
+      home_team: "Boston Red Sox",
+      home_team_id: BOS_ID,
+      venue_id: 3,
+      venue_name: "Fenway Park",
+    },
+  ],
+  "2026-07-10": [
+    {
+      game_id: "747003",
+      game_datetime: "2026-07-10T22:45:00Z",
+      away_team: "New York Yankees",
+      away_team_id: NYY_ID,
+      home_team: "Boston Red Sox",
+      home_team_id: BOS_ID,
+      venue_id: 3,
+      venue_name: "Fenway Park",
+    },
+  ],
+};
+
 async function selectDate(page: Page, month: string, day: string, year: string) {
   await page.getByRole('spinbutton', { name: 'Month' }).click();
   await page.getByRole('spinbutton', { name: 'Month' }).pressSequentially(month);
@@ -17,7 +72,11 @@ async function selectDate(page: Page, month: string, day: string, year: string) 
 
 test.describe("Home screen", () => {
   test.beforeEach(async ({ page }) => {
-    // await page.route("**/api/schedule/date*", (r) => r.fulfill({ json: [] }));
+    await page.route("**/api/schedule/date*", async (route) => {
+      const url = new URL(route.request().url());
+      const date = url.searchParams.get("date") ?? "";
+      await route.fulfill({ json: MOCK_GAMES[date] ?? [] });
+    });
     await page.goto("/");
   });
 
