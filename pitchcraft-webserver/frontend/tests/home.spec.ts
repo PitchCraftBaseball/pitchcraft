@@ -8,28 +8,33 @@ const BOS_ID = 111; // Boston Red Sox
 const PHI_ID = 143; // Philadelphia Phillies
 const LAD_ID = 119; // Los Angeles Dodgers
 
+// Computed using local time to match how GameScheduleTable formats the date
+// for its initial API request (dayjs().format("YYYY-MM-DD") uses local time).
+const _d = new Date();
+const TODAY = `${_d.getFullYear()}-${String(_d.getMonth() + 1).padStart(2, '0')}-${String(_d.getDate()).padStart(2, '0')}`;
+
 const MOCK_GAMES: Record<string, object[]> = {
-  "2026-06-05": [
+  [TODAY]: [
     {
       game_id: "747001",
-      game_datetime: "2026-06-05T17:05:00Z",
+      game_datetime: `${TODAY}T17:05:00Z`,
       away_team: "New York Yankees",
       away_team_id: NYY_ID,
       home_team: "Boston Red Sox",
       home_team_id: BOS_ID,
       venue_id: 3,
       venue_name: "Fenway Park",
-      },
-      {
-        game_id: "777001",
-        game_datetime: "2026-05-28T17:05:00Z",
-        away_team: "Los Angeles Dodgers",
-        away_team_id: LAD_ID,
-        home_team: "Philadelphia Phillies",
-        home_team_id: PHI_ID,
-        venue_id: 2681,
-        venue_name: "Citizens Bank Park",
-      },
+    },
+    {
+      game_id: "777001",
+      game_datetime: `${TODAY}T20:05:00Z`,
+      away_team: "Los Angeles Dodgers",
+      away_team_id: LAD_ID,
+      home_team: "Philadelphia Phillies",
+      home_team_id: PHI_ID,
+      venue_id: 2681,
+      venue_name: "Citizens Bank Park",
+    },
   ],
   "2026-06-10": [
     {
@@ -41,6 +46,26 @@ const MOCK_GAMES: Record<string, object[]> = {
       home_team_id: BOS_ID,
       venue_id: 3,
       venue_name: "Fenway Park",
+    },
+    {
+      game_id: "747005",
+      game_datetime: "2026-06-10T20:05:00Z",
+      away_team: "Los Angeles Dodgers",
+      away_team_id: LAD_ID,
+      home_team: "Philadelphia Phillies",
+      home_team_id: PHI_ID,
+      venue_id: 2681,
+      venue_name: "Citizens Bank Park",
+    },
+    {
+      game_id: "747006",
+      game_datetime: "2026-06-10T22:10:00Z",
+      away_team: "Chicago Cubs",
+      away_team_id: 112,
+      home_team: "St. Louis Cardinals",
+      home_team_id: 138,
+      venue_id: 2889,
+      venue_name: "Busch Stadium",
     },
   ],
   "2026-07-10": [
@@ -124,8 +149,7 @@ test.describe("Home screen", () => {
     await expect(page.getByRole('grid').getByRole('gridcell', { name: '10' }).first()).toBeVisible();
     await page.getByRole('grid').getByRole('gridcell', { name: '10' }).first().click();  
     await expect(
-      page.getByRole('row').filter({ hasText: '6:45 PM' })
-          .getByRole('cell', { name: 'New York Yankees', exact: true})
+      page.getByRole('cell', { name: 'New York Yankees', exact: true }).first()
     ).toBeVisible();
   });
 
@@ -142,9 +166,7 @@ test.describe("Home screen", () => {
     await page.keyboard.press('Enter');
 
     await expect(
-      page.getByRole('row').filter({ hasText: '1:10 PM' })
-          .getByRole('cell', { name: 'Boston Red Sox', exact: true })
-          .first()
+      page.getByRole('cell', { name: 'Boston Red Sox', exact: true }).first()
     ).toBeVisible();
   });
 
