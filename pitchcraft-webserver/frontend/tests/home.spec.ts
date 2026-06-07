@@ -155,10 +155,19 @@ test.describe("Home screen", () => {
     await page.getByRole("button", { name: /Choose date/i }).click();
     await expect(page.getByRole("button", { name: "Next Month" })).toBeVisible();
     await page.getByRole("button", { name: "Next Month" }).click();
-    await expect(page.getByRole('grid').getByRole('gridcell', { name: '10' }).first()).toBeVisible();
-    await page.getByRole('grid').getByRole('gridcell', { name: '10' }).first().click();
+
+    // Wait for the calendar grid to be stable after month navigation
+    const grid = page.getByRole("grid");
+    await expect(grid).toBeVisible();
+
+    const dayCell = grid.getByRole("gridcell", { name: "10" }).first();
+    await expect(dayCell).toBeVisible();
+    await dayCell.click();
+
+    await expect(page.getByRole("spinbutton", { name: "Day" })).toHaveText("10");
+
     await expect(
-      page.getByRole('row').filter({ hasText: /PM/ }).first()
+      page.getByRole("row").filter({ hasText: /PM/ }).first()
     ).toBeVisible();
   });
 
