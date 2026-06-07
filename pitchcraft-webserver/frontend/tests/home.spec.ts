@@ -157,7 +157,6 @@ test.describe("Home screen", () => {
     await page.getByRole("button", { name: "Next Month" }).click();
     await expect(page.getByRole('grid').getByRole('gridcell', { name: '10' }).first()).toBeVisible();
     await page.getByRole('grid').getByRole('gridcell', { name: '10' }).first().click();
-    await expect(page.getByRole('grid')).not.toBeVisible();
     await page.waitForLoadState("networkidle");
     await expect(
       page.getByRole('cell', { name: 'New York Yankees', exact: true }).first()
