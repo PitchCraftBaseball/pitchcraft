@@ -143,8 +143,12 @@ test.describe("Home screen", () => {
 
   test("Exit Simulation Screen", async ({ page }) => {
     await page.goto("/simulation");
+    await page.waitForLoadState("networkidle");
+    await expect(page.getByRole("link", { name: "PitchCraft" })).toBeVisible();
     await page.getByRole("link", { name: "PitchCraft" }).click();
+    await page.waitForLoadState("networkidle");
     await expect(page.getByRole("heading", { name: "Schedule" })).toBeVisible();
+    await expect(page.getByRole("table", { name: "schedule table" })).toBeVisible();
   });
 
   test("Select a Date from Calendar", async ({ page }) => {
@@ -152,7 +156,9 @@ test.describe("Home screen", () => {
     await expect(page.getByRole("button", { name: "Next Month" })).toBeVisible();
     await page.getByRole("button", { name: "Next Month" }).click();
     await expect(page.getByRole('grid').getByRole('gridcell', { name: '10' }).first()).toBeVisible();
-    await page.getByRole('grid').getByRole('gridcell', { name: '10' }).first().click();  
+    await page.getByRole('grid').getByRole('gridcell', { name: '10' }).first().click();
+    await expect(page.getByRole('grid')).not.toBeVisible();
+    await page.waitForLoadState("networkidle");
     await expect(
       page.getByRole('cell', { name: 'New York Yankees', exact: true }).first()
     ).toBeVisible();
