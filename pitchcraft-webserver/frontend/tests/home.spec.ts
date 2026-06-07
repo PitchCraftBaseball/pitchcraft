@@ -103,6 +103,7 @@ test.describe("Home screen", () => {
       await route.fulfill({ json: MOCK_GAMES[date] ?? [] });
     });
     await page.goto("/");
+    await expect(page.getByRole("table", { name: "schedule table" })).toBeVisible();
   });
 
   test("Home Screen has default components loaded", async ({ page }) => {
@@ -119,6 +120,7 @@ test.describe("Home screen", () => {
     await expect(page).toHaveURL(/\/simulation/);
 
     await page.goto("/");
+    await expect(page.getByRole("table", { name: "schedule table" })).toBeVisible();
 
     await page.getByRole("button", { name: "User Guide" }).click();
     await expect(page.getByTestId("user-guide")).toBeVisible();
@@ -128,6 +130,7 @@ test.describe("Home screen", () => {
     await page.getByRole("button", { name: "SIMULATE MATCHUP" }).click();
     await expect(page).toHaveURL(/\/simulation/);
     await page.goto("/");
+    await expect(page.getByRole("table", { name: "schedule table" })).toBeVisible();
   });
 
   test("Show User Guide", async ({ page }) => {
@@ -157,13 +160,9 @@ test.describe("Home screen", () => {
 
   test("Type a Date into the DatePicker", async ({ page }) => {
     await page.getByRole('spinbutton', { name: 'Month' }).click();
-    await page.getByRole('spinbutton', { name: 'Month' }).fill('06');
-
-    await page.getByRole('spinbutton', { name: 'Day' }).click();
-    await page.getByRole('spinbutton', { name: 'Day' }).fill('10');
-
-    await page.getByRole('spinbutton', { name: 'Year' }).click();
-    await page.getByRole('spinbutton', { name: 'Year' }).fill('2026');
+    await page.getByRole('spinbutton', { name: 'Month' }).pressSequentially('06');
+    await page.getByRole('spinbutton', { name: 'Day' }).pressSequentially('10');
+    await page.getByRole('spinbutton', { name: 'Year' }).pressSequentially('2026');
 
     await page.keyboard.press('Enter');
 
@@ -191,6 +190,7 @@ test.describe("Home screen", () => {
     const day = String(today.getDate()).padStart(2, '0');
     const year = String(today.getFullYear());
 
+    await expect(page.getByRole('spinbutton', { name: 'Month' })).toBeVisible();
     await expect(page.getByRole('spinbutton', { name: 'Month' })).toHaveText(month);
     await expect(page.getByRole('spinbutton', { name: 'Day' })).toHaveText(day);
     await expect(page.getByRole('spinbutton', { name: 'Year' })).toHaveText(year);
@@ -262,6 +262,7 @@ test.describe("Home screen", () => {
   test("Check each row of Games Table has content", async ({ page }) => {
     await expect(page.getByRole('table', { name: 'schedule table' })).toBeVisible();
     const rows = page.getByRole('row').filter({ hasText: /PM/ });
+    await expect(rows.first()).toBeVisible();
     const rowCount = await rows.count();
     expect(rowCount).toBeGreaterThan(0);
     for (let i = 0; i < rowCount; i++) {
