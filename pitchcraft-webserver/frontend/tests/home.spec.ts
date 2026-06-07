@@ -141,35 +141,38 @@ test.describe("Home screen", () => {
     await expect(page.getByRole("heading", { name: "Schedule" })).toBeVisible();
   });
 
-  test("Exit Simulation Screen", async ({ page }) => {
-    await page.goto("/simulation");
-    await page.waitForLoadState("networkidle");
-    await expect(page.getByRole("link", { name: "PitchCraft" })).toBeVisible();
-    await page.getByRole("link", { name: "PitchCraft" }).click();
-    await page.waitForLoadState("networkidle");
-    await expect(page.getByRole("heading", { name: "Schedule" })).toBeVisible();
-    await expect(page.getByRole("table", { name: "schedule table" })).toBeVisible();
-  });
+test("Exit Simulation Screen", async ({ page }) => {
+  await page.goto("/simulation");
+  await expect(page.getByRole("heading")).toBeVisible(); // Wait for actual content
+  await expect(page.getByRole("link", { name: "PitchCraft" })).toBeVisible();
+  
+  await page.getByRole("link", { name: "PitchCraft" }).click();
+  
+  // Wait for the schedule table instead of networkidle
+  await expect(page.getByRole("table", { name: "schedule table" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Schedule" })).toBeVisible();
+});
 
-  test("Select a Date from Calendar", async ({ page }) => {
-    await page.getByRole("button", { name: /Choose date/i }).click();
-    await expect(page.getByRole("button", { name: "Next Month" })).toBeVisible();
-    await page.getByRole("button", { name: "Next Month" }).click();
+test("Select a Date from Calendar", async ({ page }) => {
+  await page.getByRole("button", { name: /Choose date/i }).click();
+  await expect(page.getByRole("button", { name: "Next Month" })).toBeVisible();
+  await page.getByRole("button", { name: "Next Month" }).click();
 
-    // Wait for the calendar grid to be stable after month navigation
-    const grid = page.getByRole("grid");
-    await expect(grid).toBeVisible();
+  const grid = page.getByRole("grid");
+  await expect(grid).toBeVisible();
 
-    const dayCell = grid.getByRole("gridcell", { name: "10" }).first();
-    await expect(dayCell).toBeVisible();
-    await dayCell.click();
+  const dayCell = grid.getByRole("gridcell", { name: "10" }).first();
+  await expect(dayCell).toBeVisible();
+  await dayCell.click();
 
-    await expect(page.getByRole("spinbutton", { name: "Day" })).toHaveText("10");
+  // Wait for the spinbutton to update with the selected day
+  const daySpinbutton = page.getByRole("spinbutton", { name: "Day" });
+  await expect(daySpinbutton).toHaveText("10");
 
-    await expect(
-      page.getByRole("row").filter({ hasText: /PM/ }).first()
-    ).toBeVisible();
-  });
+  await expect(
+    page.getByRole("row").filter({ hasText: /PM/ }).first()
+  ).toBeVisible();
+});
 
   test("Type a Date into the DatePicker", async ({ page }) => {
     await page.getByRole('spinbutton', { name: 'Month' }).click();
